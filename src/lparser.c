@@ -1642,6 +1642,31 @@ static void statement (LexState *ls) {
       break;
     }
   #endif
+  #ifdef LUAEX_CLNTSRV
+    case TK_CLIENT: case TK_SERVER:  {  /* client or server side */
+        OpCode op = (ls->t.token == TK_SERVER) ? OP_SRV : OP_CLNT;
+        luaX_next(ls);
+        expdesc v, b;
+        /* client or server */
+        init_exp(&v, VRELOCABLE, luaK_codeABx(ls->fs, op, 0, ls->fs->np - 1));
+        luaK_exp2nextreg(ls->fs, &v);  /* fix it at the last register */
+        if (ls->t.token == TK_FUNCTION) { /* function? */
+          luaX_next(ls);  /* skip FUNCTION */
+          /* function */
+          singlevar(ls, &v);
+          if (ls->t.token == ':')
+            luaX_syntaxerror(ls, "expected function, got method");
+          else if (ls->t.token == '.')
+            fieldsel(ls, &v);
+          body(ls, &b, 0, line);
+          luaK_storevar(ls->fs, &v, &b);
+          luaK_fixline(ls->fs, line);  /* definition "happens" in the first line */
+        }
+        else
+          luaX_syntaxerror(ls, "expected function");
+      break;
+    }
+  #endif
     default: {  /* stat -> func | assignment */
       exprstat(ls);
       break;

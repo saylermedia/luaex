@@ -230,6 +230,11 @@ OP_CLOSURE,/*	A Bx	R(A) := closure(KPROTO[Bx])			*/
 
 OP_VARARG,/*	A B	R(A), R(A+1), ..., R(A+B-2) = vararg		*/
 
+#ifdef LUAEX_CLNTSRV
+OP_CLNT, /* client */
+OP_SRV, /* server */
+#endif
+
 OP_EXTRAARG/*	Ax	extra (larger) argument for previous opcode	*/
 } OpCode;
 

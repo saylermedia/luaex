@@ -14,6 +14,9 @@
 #include <string.h>
 
 #include "lua.h"
+#ifdef LUAEX_CLNTSRV
+#include "luaex.h"
+#endif
 
 #include "lapi.h"
 #include "ldebug.h"
@@ -271,6 +274,11 @@ LUA_API lua_State *lua_newthread (lua_State *L) {
   L1->hookmask = L->hookmask;
   L1->basehookcount = L->basehookcount;
   L1->hook = L->hook;
+#ifdef LUAEX_CLNTSRV
+  L1->side = L->side;
+  L1->sscall = L->sscall;
+  L1->sccall = L->sccall;
+#endif
   resethookcount(L1);
   /* initialize L1 extra space */
   memcpy(lua_getextraspace(L1), lua_getextraspace(g->mainthread),
@@ -302,6 +310,11 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   g = &l->g;
   L->next = NULL;
   L->tt = LUA_TTHREAD;
+#ifdef LUAEX_CLNTSRV
+  L->side = LUAEX_SBOTH;
+  L->sscall = NULL;
+  L->sccall = NULL;
+#endif
   g->currentwhite = bitmask(WHITE0BIT);
   L->marked = luaC_white(g);
   preinit_thread(L, g);
@@ -345,3 +358,17 @@ LUA_API void lua_close (lua_State *L) {
 }
 
 
+#ifdef LUAEX_CLNTSRV
+LUA_API void lua_setside (lua_State *L, int side, lua_CFunction scall, lua_CFunction ccall) {
+  lua_lock(L);
+  L->side = side;
+  L->sscall = scall;
+  L->sccall = ccall;
+  lua_unlock(L);
+}
+
+
+LUA_API int lua_side (lua_State *L) {
+  return L->side;
+}
+#endif

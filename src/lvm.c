@@ -17,6 +17,9 @@
 #include <string.h>
 
 #include "lua.h"
+#ifdef LUAEX_CLNTSRV
+#include "luaex.h"
+#endif
 
 #include "ldebug.h"
 #include "ldo.h"
@@ -794,6 +797,11 @@ void luaV_execute (lua_State *L) {
   cl = clLvalue(ci->func);  /* local reference to function's closure */
   k = cl->p->k;  /* local reference to function's constant table */
   base = ci->u.l.base;  /* local copy of function's base */
+#ifdef LUAEX_CLNTSRV
+  int srvclnt = LUAEX_SBOTH;
+  CClosure *srvcl = NULL;
+  StkId srvcltab = NULL;
+#endif
   /* main loop of interpreter */
   for (;;) {
     Instruction i;
@@ -837,6 +845,9 @@ void luaV_execute (lua_State *L) {
         TValue *upval = cl->upvals[GETARG_B(i)]->v;
         TValue *rc = RKC(i);
         gettableProtected(L, upval, rc, ra);
+	  #ifdef LUAEX_CLNTSRV
+        if (srvclnt) srvcltab = rc;
+      #endif
         vmbreak;
       }
       vmcase(OP_GETTABLE) {
@@ -850,6 +861,12 @@ void luaV_execute (lua_State *L) {
         TValue *rb = RKB(i);
         TValue *rc = RKC(i);
         settableProtected(L, upval, rb, rc);
+	  #ifdef LUAEX_CLNTSRV
+        if (srvcl) {
+          setobj2n(L, &srvcl->upvalue[0], rb); /* save table name to upvalue */
+          srvcl = NULL;
+        }
+      #endif
         vmbreak;
       }
       vmcase(OP_SETUPVAL) {
@@ -862,6 +879,12 @@ void luaV_execute (lua_State *L) {
         TValue *rb = RKB(i);
         TValue *rc = RKC(i);
         settableProtected(L, ra, rb, rc);
+	  #ifdef LUAEX_CLNTSRV
+        if (srvcl) {
+          setobj2n(L, &srvcl->upvalue[1], rb); /* save method name to upvalue */
+          srvcl = NULL;
+        }
+      #endif
         vmbreak;
       }
       vmcase(OP_NEWTABLE) {
@@ -1284,6 +1307,23 @@ void luaV_execute (lua_State *L) {
       }
       vmcase(OP_CLOSURE) {
         Proto *p = cl->p->p[GETARG_Bx(i)];
+	  #ifdef LUAEX_CLNTSRV
+        if (srvclnt) {
+          lua_CFunction f = (srvclnt == LUAEX_SSERVER) ? L->sscall : L->sccall;
+          if (f) {
+            srvcl = luaF_newCclosure(L, (srvcltab) ? 2 : 1);
+            srvcl->f = f;
+            setclCvalue(L, ra, srvcl);
+            checkGC(L, ra + 1);
+            srvclnt = LUAEX_SBOTH;
+            if (srvcltab) {
+              setobj2n(L, &srvcl->upvalue[0], srvcltab);
+              srvcltab = NULL;
+            }
+            vmbreak;
+          }
+        }
+      #endif
         LClosure *ncl = getcached(p, cl->upvals, base);  /* cached closure */
         if (ncl == NULL)  /* no match? */
           pushclosure(L, p, cl->upvals, base, ra);  /* create a new one */
@@ -1310,6 +1350,18 @@ void luaV_execute (lua_State *L) {
           setnilvalue(ra + j);
         vmbreak;
       }
+	#ifdef LUAEX_CLNTSRV
+	  vmcase(OP_CLNT) {
+        if (L->side == LUAEX_SSERVER)
+          srvclnt = LUAEX_SCLIENT;
+        vmbreak;
+      }
+      vmcase(OP_SRV) {
+        if (L->side == LUAEX_SCLIENT)
+          srvclnt = LUAEX_SSERVER;
+        vmbreak;
+      }
+    #endif
       vmcase(OP_EXTRAARG) {
         lua_assert(0);
         vmbreak;

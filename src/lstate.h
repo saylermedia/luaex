@@ -199,6 +199,11 @@ struct lua_State {
   unsigned short nCcalls;  /* number of nested C calls */
   l_signalT hookmask;
   lu_byte allowhook;
+#ifdef LUAEX_CLNTSRV
+  int side; /* running on side */
+  lua_CFunction sscall; /* hook function server call */
+  lua_CFunction sccall; /* hook function client call */
+#endif
 };
 
 

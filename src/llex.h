@@ -31,6 +31,9 @@ enum RESERVED {
 #ifdef LUAEX_TRYCATCH
   TK_TRY, TK_CATCH,
 #endif
+#ifdef LUAEX_CLNTSRV
+  TK_CLIENT, TK_SERVER,
+#endif
   TK_RETURN, TK_THEN, TK_TRUE, TK_UNTIL, TK_WHILE,
   /* other terminal symbols */
   TK_IDIV, TK_CONCAT, TK_DOTS, TK_EQ, TK_GE, TK_LE, TK_NE,

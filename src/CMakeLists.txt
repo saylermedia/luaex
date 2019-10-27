@@ -6,7 +6,7 @@ set(SOURCES lapi.c lcode.c lctype.c ldebug.c ldo.c ldump.c lfunc.c lgc.c
 	lmathlib.c loslib.c lstrlib.c ltablib.c lutf8lib.c loadlib.c linit.c)
 
 set_source_files_properties(${SOURCES} lua.c luac.c PROPERTIES C_STANDARD 99)
-add_definitions(-O2 -DLUAEX_TRYCATCH)
+add_definitions(-O2 -DLUAEX_BASE -DLUAEX_TRYCATCH -DLUAEX_CLNTSRV)
 
 if(CMAKE_C_COMPILER_ID STREQUAL GNU)
 	add_definitions(-Wall -Wextra)
@@ -41,7 +41,7 @@ endif()
 target_include_directories(liblua INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 install(TARGETS liblua RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
-install(FILES lua.h luaconf.h lualib.h lauxlib.h lua.hpp DESTINATION include)
+install(FILES lua.h luaconf.h lualib.h lauxlib.h lua.hpp luaex.h DESTINATION include)
 
 if(LUA_BUILD_EXECUTABLES)
 	add_executable(lua lua.c)

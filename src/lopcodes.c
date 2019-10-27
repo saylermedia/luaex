@@ -64,6 +64,10 @@ LUAI_DDEF const char *const luaP_opnames[NUM_OPCODES+1] = {
   "SETLIST",
   "CLOSURE",
   "VARARG",
+#ifdef LUAEX_CLNTSRV
+  "CLNT",
+  "SRV",
+#endif
   "EXTRAARG",
   NULL
 };
@@ -119,6 +123,10 @@ LUAI_DDEF const lu_byte luaP_opmodes[NUM_OPCODES] = {
  ,opmode(0, 0, OpArgU, OpArgU, iABC)		/* OP_SETLIST */
  ,opmode(0, 1, OpArgU, OpArgN, iABx)		/* OP_CLOSURE */
  ,opmode(0, 1, OpArgU, OpArgN, iABC)		/* OP_VARARG */
+#ifdef LUAEX_CLNTSRV
+ ,opmode(0, 0, 0, 0, iABC)					/* OP_CLNT */
+ ,opmode(0, 0, 0, 0, iABC)					/* OP_SRV */
+#endif
  ,opmode(0, 0, OpArgU, OpArgU, iAx)		/* OP_EXTRAARG */
 };
 

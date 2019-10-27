@@ -19,6 +19,9 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
+#if defined(LUAEX_BASE) | defined(LUAEX_CLNTSRV)
+#include "luaex.h"
+#endif
 
 
 #if !defined(LUA_PROMPT)
@@ -592,14 +595,40 @@ static int pmain (lua_State *L) {
   return 1;
 }
 
+#ifdef LUAEX_CLNTSRV
+#include <stdio.h>
+static int sscall(lua_State *L) {
+  lua_pushfstring(L, "Server: %s #%d", lua_tostring(L, lua_upvalueindex(1)), lua_gettop(L));
+  return 1;
+}
+
+static int sccall(lua_State *L) {
+  lua_pushfstring(L, "Client: %s #%d", lua_tostring(L, lua_upvalueindex(1)), lua_gettop(L));
+  return 1;
+}
+#endif
+
+#ifdef LUAEX_BASE
+#ifdef _WIN32
+#include <windows.h>
+#endif
+#endif
 
 int main (int argc, char **argv) {
+#ifdef LUAEX_BASE
+#ifdef _WIN32
+  SetConsoleOutputCP(CP_UTF8);
+#endif
+#endif
   int status, result;
   lua_State *L = luaL_newstate();  /* create state */
   if (L == NULL) {
     l_message(argv[0], "cannot create state: not enough memory");
     return EXIT_FAILURE;
   }
+#ifdef LUAEX_CLNTSRV
+  lua_setside(L, LUAEX_SCLIENT, sscall, sccall);
+#endif
   lua_pushcfunction(L, &pmain);  /* to call 'pmain' in protected mode */
   lua_pushinteger(L, argc);  /* 1st argument */
   lua_pushlightuserdata(L, argv); /* 2nd argument */

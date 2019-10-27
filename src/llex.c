@@ -44,6 +44,9 @@ static const char *const luaX_tokens [] = {
 #ifdef LUAEX_TRYCATCH
     "try", "catch",
 #endif
+#ifdef LUAEX_CLNTSRV
+    "client", "server",
+#endif
     "return", "then", "true", "until", "while",
     "//", "..", "...", "==", ">=", "<=", "~=",
     "<<", ">>", "::", "<eof>",
