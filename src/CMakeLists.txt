@@ -3,10 +3,10 @@ cmake_minimum_required(VERSION 3.4.1)
 set(SOURCES lapi.c lcode.c lctype.c ldebug.c ldo.c ldump.c lfunc.c lgc.c
 	llex.c lmem.c lobject.c lopcodes.c lparser.c lstate.c lstring.c ltable.c ltm.c
 	lundump.c lvm.c lzio.c lauxlib.c lbaselib.c lbitlib.c lcorolib.c ldblib.c liolib.c
-	lmathlib.c loslib.c lstrlib.c ltablib.c lutf8lib.c loadlib.c linit.c lserialize.c)
+	lmathlib.c loslib.c lstrlib.c ltablib.c lutf8lib.c loadlib.c linit.c lserialize.c lthreadlib.c)
 
 set_source_files_properties(${SOURCES} lua.c luac.c PROPERTIES C_STANDARD 99)
-add_definitions(-O2 -DLUAEX_BASE -DLUAEX_TRYCATCH -DLUAEX_CLNTSRV -DLUAEX_SERIALIZE)
+add_definitions(-O2 -DLUAEX_BASE -DLUAEX_TRYCATCH -DLUAEX_CLNTSRV -DLUAEX_SERIALIZE -DLUAEX_THREADLIB)
 
 if(CMAKE_C_COMPILER_ID STREQUAL GNU)
 	add_definitions(-Wall -Wextra)

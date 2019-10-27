@@ -47,6 +47,10 @@ LUAMOD_API int (luaopen_debug) (lua_State *L);
 #define LUA_LOADLIBNAME	"package"
 LUAMOD_API int (luaopen_package) (lua_State *L);
 
+#ifdef LUAEX_THREADLIB
+#define LUA_THREADLIBNAME "thread"
+LUAMOD_API int (luaopen_thread) (lua_State *L);
+#endif
 
 /* open all previous libraries */
 LUALIB_API void (luaL_openlibs) (lua_State *L);
