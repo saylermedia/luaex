@@ -1,0 +1,10 @@
+cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release ../luaex
+cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release ../luaex
+cmake -DCMAKE_BUILD_TYPE=Release ../luaex
+cmake --build .
+cmake --build . --target install
+
+cmake -DCMAKE_BUILD_TYPE=Release ../luaex
+
+cmake -G "Visual Studio 14 2015" ../luaex
+
