@@ -405,6 +405,16 @@ LUAMOD_API int luaopen_math (lua_State *L) {
   lua_setfield(L, -2, "maxinteger");
   lua_pushinteger(L, LUA_MININTEGER);
   lua_setfield(L, -2, "mininteger");
+#ifdef LUAEX_BASE /* set math as metatable for numbers */
+  lua_createtable(L, 0, 2);  /* table to be metatable for numbers */
+  lua_pushnumber(L, 0); /* push dummy number */
+  lua_pushvalue(L, -2);  /* copy table */
+  lua_setmetatable(L, -2);  /* set table as metatable for numbers */
+  lua_pop(L, 1);  /* pop dummy number */
+  lua_pushvalue(L, -2);  /* get math library */
+  lua_setfield(L, -2, "__index");  /* metatable.__index = math */
+  lua_pop(L, 1);  /* pop metatable */
+#endif
   return 1;
 }
 
