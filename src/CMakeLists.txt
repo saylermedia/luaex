@@ -6,7 +6,7 @@ set(SOURCES lapi.c lcode.c lctype.c ldebug.c ldo.c ldump.c lfunc.c lgc.c
 	lmathlib.c loslib.c lstrlib.c ltablib.c lutf8lib.c loadlib.c linit.c)
 
 set_source_files_properties(${SOURCES} lua.c luac.c PROPERTIES C_STANDARD 99)
-add_definitions(-O2)
+add_definitions(-O2 -DLUAEX_TRYCATCH)
 
 if(CMAKE_C_COMPILER_ID STREQUAL GNU)
 	add_definitions(-Wall -Wextra)

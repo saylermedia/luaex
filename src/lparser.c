@@ -588,6 +588,9 @@ static int block_follow (LexState *ls, int withuntil) {
   switch (ls->t.token) {
     case TK_ELSE: case TK_ELSEIF:
     case TK_END: case TK_EOS:
+  #ifdef LUAEX_TRYCATCH
+    case TK_CATCH:
+  #endif
       return 1;
     case TK_UNTIL: return withuntil;
     default: return 0;
@@ -1591,6 +1594,54 @@ static void statement (LexState *ls) {
       gotostat(ls, luaK_jump(ls->fs));
       break;
     }
+  #ifdef LUAEX_TRYCATCH
+    case TK_TRY: {
+      luaX_next(ls);
+      expdesc b, var;
+      FuncState *fs = ls->fs;
+
+      TString *varname = luaX_newstring(ls, "xpcall", 6);
+      singlevaraux(fs, varname, &var, 1);
+      if (var.k == VVOID) {  /* global name? */
+        expdesc key;
+        singlevaraux(fs, ls->envn, &var, 1);  /* get environment variable */
+        lua_assert(var->k != VVOID);  /* this one must exist */
+        codestring(ls, &key, varname);  /* key is variable name */
+        luaK_indexed(fs, &var, &key);  /* env[varname] */
+      }
+      luaK_exp2nextreg(fs, &var);
+
+      int line = ls->linenumber;
+      FuncState new_fs;
+      BlockCnt bl;
+      
+      new_fs.f = addprototype(ls);
+      new_fs.f->linedefined = line;
+      open_func(ls, &new_fs, &bl);
+      statlist(ls);
+      new_fs.f->lastlinedefined = ls->linenumber;
+      check_match(ls, TK_CATCH, TK_TRY, line);
+      codeclosure(ls, &b);
+      close_func(ls);
+
+      line = ls->linenumber;
+      new_fs.f = addprototype(ls);
+      new_fs.f->linedefined = line;
+      open_func(ls, &new_fs, &bl);
+      checknext(ls, '(');
+      parlist(ls);
+      checknext(ls, ')');
+      statlist(ls);
+      new_fs.f->lastlinedefined = ls->linenumber;
+      check_match(ls, TK_END, TK_TRY, line);
+      codeclosure(ls, &b);
+      close_func(ls);
+
+      init_exp(&b, VCALL, luaK_codeABC(fs, OP_CALL, var.u.info, 3, 3));
+      luaK_fixline(fs, line);
+      break;
+    }
+  #endif
     default: {  /* stat -> func | assignment */
       exprstat(ls);
       break;
