@@ -299,9 +299,9 @@ LUAI_DDEC const char *const luaP_opnames[NUM_OPCODES+1];  /* opcode names */
 /* number of list items to accumulate before a SETLIST instruction */
 #define LFIELDS_PER_FLUSH	50
 
-/* extreme block */
+#ifdef LUAEX_BASE
 LUA_API const char * (luaP_opname) (int i);
 LUA_API const lu_byte (luaP_opmode) (int i);
-/* extreme end */
+#endif
 
 #endif

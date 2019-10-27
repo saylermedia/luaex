@@ -130,7 +130,7 @@ LUAI_DDEF const lu_byte luaP_opmodes[NUM_OPCODES] = {
  ,opmode(0, 0, OpArgU, OpArgU, iAx)		/* OP_EXTRAARG */
 };
 
-/* extreme block */
+#ifdef LUAEX_BASE
 LUA_API const char * luaP_opname (int i) {
   return luaP_opnames[i];
 }
@@ -138,4 +138,4 @@ LUA_API const char * luaP_opname (int i) {
 LUA_API const lu_byte luaP_opmode (int i) {
   return luaP_opmodes[i];
 }
-/* extreme end */
+#endif

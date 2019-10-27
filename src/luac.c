@@ -222,7 +222,7 @@ int main(int argc, char* argv[])
 #include "lobject.h"
 #include "lopcodes.h"
 
-/* extreme block */
+#ifdef LUAEX_BASE
 #undef getOpMode
 #undef getBMode
 #undef getCMode
@@ -233,7 +233,8 @@ int main(int argc, char* argv[])
 #define getCMode(m)	(cast(enum OpArgMask, (luaP_opmode(m) >> 2) & 3))
 #define testAMode(m)	(luaP_opmode(m) & (1 << 6))
 #define testTMode(m)	(luaP_opmode(m) & (1 << 7))
-/* extreme end */
+#endif
+
 
 #define VOID(p)		((const void*)(p))
 
@@ -316,7 +317,11 @@ static void PrintCode(const Proto* f)
   int line=getfuncline(f,pc);
   printf("\t%d\t",pc+1);
   if (line>0) printf("[%d]\t",line); else printf("[-]\t");
-  printf("%-9s\t",/* extreme replace luaP_opnames[o] */ luaP_opname(o));
+#ifdef LUAEX_BASE
+  printf("%-9s\t",luaP_opname(o));
+#else
+  printf("%-9s\t",luaP_opnames[o]);
+#endif
   switch (getOpMode(o))
   {
    case iABC:
