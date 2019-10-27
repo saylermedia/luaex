@@ -1,7 +1,7 @@
 /*
-** $Id: lserialize.c
-** Serialize values
-** Copyright
+** Serialize and deserialize values
+** author: Alexey Smirnov
+** 
 */
 
 #ifdef LUAEX_SERIALIZE
