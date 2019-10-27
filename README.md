@@ -9,7 +9,6 @@ catch (e)
   print(e)
 end
  ```
- 
 * Added syntax constructs to support client-server architecture, for example:
 ```lua
 server function floor(x)
@@ -30,3 +29,9 @@ int main() {
   ...
 }
  ```
+* Added math table as metatable for number values, for example:
+```lua
+local n = 555.325
+print(n:floor())
+print(tonumber("12.4555"):floor())
+```
