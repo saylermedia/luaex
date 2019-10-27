@@ -201,6 +201,9 @@ static void* thread_proc (void *par) {
   int top = lua_gettop(t->L);
   t->status = lua_pcall(t->L, t->nvars, LUA_MULTRET, 0);
   t->nresults = lua_gettop(t->L) - top + t->nvars + 1; /* nvars + func */
+  MUTEX_lock(&t->mutex);
+  t->running = 0;
+  MUTEX_unlock(&t->mutex);
   return NULL;
 }
 
