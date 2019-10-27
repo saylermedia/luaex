@@ -35,3 +35,16 @@ local n = 555.325
 print(n:floor())
 print(tonumber("12.4555"):floor())
 ```
+* Added serialize and deserialize functions, for example:
+```lua
+print(serialize(5192.444))
+print(deserialize(serialize(5192.444)))
+```
+also 'C':
+```C
+lua_pushinteger(L, 100500);
+lua_serialize(L, -1);
+printf("serialize %s\n", lua_tostring(L, -1));
+lua_deserialize(L, -1);
+printf("deserialize %lld\n", lua_tointeger(L, -1));
+```
