@@ -19,6 +19,9 @@
 
 #include "lauxlib.h"
 #include "lualib.h"
+#ifdef LUAEX_SERIALIZE
+#include "luaex.h"
+#endif
 
 
 static int luaB_print (lua_State *L) {
@@ -450,6 +453,26 @@ static int luaB_tostring (lua_State *L) {
 }
 
 
+#ifdef LUAEX_SERIALIZE
+static int luaB_serialize (lua_State *L) {
+  luaL_checkany(L, 1);
+  int i, count = lua_gettop(L);
+  for (i = 1; i <= count; i++)
+    lua_serialize(L, i);
+  return count;
+}
+
+
+static int luaB_deserialize (lua_State *L) {
+  luaL_checkany(L, 1);
+  int i, count = lua_gettop(L);
+  for (i = 1; i <= count; i++)
+    lua_deserialize(L, i);
+  return count;
+}
+#endif
+
+
 static const luaL_Reg base_funcs[] = {
   {"assert", luaB_assert},
   {"collectgarbage", luaB_collectgarbage},
@@ -476,6 +499,10 @@ static const luaL_Reg base_funcs[] = {
   {"tostring", luaB_tostring},
   {"type", luaB_type},
   {"xpcall", luaB_xpcall},
+#ifdef LUAEX_SERIALIZE
+  {"serialize", luaB_serialize},
+  {"deserialize", luaB_deserialize},
+#endif
   /* placeholders */
   {"_G", NULL},
   {"_VERSION", NULL},

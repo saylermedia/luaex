@@ -19,5 +19,11 @@ LUA_API void  (lua_setside) (lua_State *L, int side, lua_CFunction scall, lua_CF
 LUA_API int   (lua_side) (lua_State *L);
 #endif
 
+#ifdef LUAEX_SERIALIZE
+/* serialize and deserialize values */
+LUA_API void (lua_serialize) (lua_State *L, int idx);
+LUA_API void (lua_deserialize) (lua_State *L, int idx);
+#endif
+
 
 #endif
