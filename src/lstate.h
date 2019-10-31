@@ -200,9 +200,12 @@ struct lua_State {
   l_signalT hookmask;
   lu_byte allowhook;
 #ifdef LUAEX_CLNTSRV
-  int side; /* running on side */
-  lua_CFunction sscall; /* hook function server call */
-  lua_CFunction sccall; /* hook function client call */
+  volatile int side; /* running on side */
+  volatile lua_CFunction sscall; /* hook function server call */
+  volatile lua_CFunction sccall; /* hook function client call */
+#endif
+#ifdef LUAEX_THREADLIB
+  volatile int canceled; /* cancel execution (native thread destructor) */
 #endif
 };
 

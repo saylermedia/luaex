@@ -456,19 +456,14 @@ static int luaB_tostring (lua_State *L) {
 #ifdef LUAEX_SERIALIZE
 static int luaB_serialize (lua_State *L) {
   luaL_checkany(L, 1);
-  int i, count = lua_gettop(L);
-  for (i = 1; i <= count; i++)
-    lua_serialize(L, i);
-  return count;
+  lua_serialize(L, 1, lua_gettop(L));
+  return 1;
 }
 
 
 static int luaB_deserialize (lua_State *L) {
   luaL_checkany(L, 1);
-  int i, count = lua_gettop(L);
-  for (i = 1; i <= count; i++)
-    lua_deserialize(L, i);
-  return count;
+  return lua_deserialize(L, 1);
 }
 #endif
 

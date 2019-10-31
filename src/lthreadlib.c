@@ -1,7 +1,7 @@
 /*
-** Native threads support
-** author: Alexey Smirnov
-** 
+** Native threads library
+** See Agreement in LICENSE
+** Copyright (C) 2019, Alexey Smirnov <saylermedia@gmail.com>
 */
 
 #ifdef LUAEX_THREADLIB
@@ -14,6 +14,8 @@
 #include "lprefix.h"
 
 #include <math.h>
+#include <malloc.h>
+#include <string.h>
 
 #include "lua.h"
 
@@ -28,9 +30,9 @@
 #include <windows.h>
 #include <process.h>
 
-#ifdef LoadString
+/*#ifdef LoadString
 #undef LoadString
-#endif
+#endif*/
 
 typedef CRITICAL_SECTION MUTEX;
 typedef CONDITION_VARIABLE COND;
@@ -47,13 +49,17 @@ typedef HANDLE THREAD;
 #define COND_destroy(x)
 
 #define COND_wait(x,y) SleepConditionVariableCS(x, y, INFINITE)
-#define COND_wait_for(x,y,z) SleepConditionVariableCS(x, y, z)
+#define COND_waitfor(x,y,z) SleepConditionVariableCS(x, y, (DWORD)z)
 
 #define COND_notify(x) WakeConditionVariable(x)
 #define COND_broadcast(x) WakeAllConditionVariable(x)
 
+#define THREAD_id() GetCurrentThreadId()
+/* windows EOF */
 #else
 /* posix threads */
+#include <time.h>
+#include <sys/time.h>
 #include <pthread.h>
 
 typedef pthread_mutex_t MUTEX;
@@ -77,258 +83,351 @@ static void MUTEX_init (MUTEX *mutex) {
 #define COND_destroy(x) pthread_cond_destroy(x)
 
 #define COND_wait(x,y) pthread_cond_wait(x, y);
-LUA_API int (COND_waitfor) (COND *cond, MUTEX *mutex, unsigned long msec);
+static int COND_waitfor (COND *cond, MUTEX *mutex, unsigned long msec) {
+  struct timespec ts;
+	clock_gettime(CLOCK_REALTIME, &ts);
+	
+	ts.tv_nsec += msec % 1000 * 1000000;
+	ts.tv_sec  += msec / 1000 + ts.tv_nsec / 1000000000;
+	ts.tv_nsec %= 1000000000;
+	
+	return (pthread_cond_timedwait(cond, mutex, &ts) == 0);
+}
 
 #define COND_notify(x) pthread_cond_signal(x)
 #define COND_broadcast(x) pthread_cond_broadcast(x)
 
-#endif
-
-typedef unsigned long lua_ThreadId;
-#ifdef _WIN32
-#define lua_threadid() ((lua_ThreadId) GetCurrentThreadId())
-#else
-#define lua_threadid() ((lua_ThreadId) pthread_self())
+#define THREAD_id() pthread_self()
+/* posix EOF  */
 #endif
 
 
 #define LUA_THREADHANDLE "THREAD*"
+#define LUA_POOLHANDLE "POOL*"
+
+#define LUA_THREAD_USERDATA "_THREAD"
 
 
-typedef struct LThread {
+typedef struct ThreadState {
   lua_State *L;
-  int nvars;
+  char *var;
+  size_t varsize;
   int status;
-  int nresults;
-  MUTEX mutex;
+#ifdef _WIN32
+  DWORD threadId;
+#endif
   THREAD thread;
   volatile int running;
   volatile int interrupted;
-} LThread;
+  MUTEX mutex;
+  COND cond;
+  int gcfree;
+} ThreadState;
 
 
-static int writer (lua_State *L, const void *b, size_t size, void *B) {
-  (void)L;
-  luaL_addlstring((luaL_Buffer *) B, (const char *)b, size);
-  return 0;
-}
+typedef struct PoolState {
+  ThreadState *arr;
+  size_t arrsize;
+} PoolState;
 
 
-static void copy (lua_State *L1, lua_State *L, int idx, int top) {
-  switch (lua_type(L, idx)) {
-    case LUA_TNIL:
-      lua_pushnil(L1);
-      break;
-    case LUA_TBOOLEAN:
-      lua_pushboolean(L1, lua_toboolean(L, idx));
-      break;
-    case LUA_TNUMBER: {
-      lua_Number v = lua_tonumber(L, idx);
-      if (trunc(v) == v)
-        lua_pushinteger(L1, lua_tointeger(L, idx));
-      else
-        lua_pushnumber(L1, v);
-      break;
-    }
-    case LUA_TSTRING: {
-      size_t l;
-      const char *s = lua_tolstring(L, idx, &l);
-      lua_pushlstring(L1, s, l);
-      break;
-    }
-  case LUA_TTABLE: {
-    const char *p = lua_topointer(L, idx);
-    lua_pushlightuserdata(L1, (void*) p);
-    lua_rawget(L1, top);
-    if (lua_istable(L1, -1))
-      break;
-    lua_pop(L1, 1);
-    lua_newtable(L1);
-    /* store pointer */
-    lua_pushlightuserdata(L1, (void*) p);
-    lua_pushvalue(L1, -2);
-    lua_rawset(L1, top);
-    /**/
-    lua_pushvalue(L, idx);
+static int thread_call (lua_State *L) {
+  ThreadState *ts = (ThreadState *) lua_touserdata(L, 1);
+  /* initialize state */
+  luaL_openlibs(L);
+  lua_pushlightuserdata(L, ts);
+  lua_setfield(L, LUA_REGISTRYINDEX, LUA_THREAD_USERDATA);
+  /* deserialize variables */
+  lua_pushlstring(L, ts->var, ts->varsize);
+  int top = lua_gettop(L);
+  int nvars = lua_deserialize(L, -1);
+  lua_remove(L, top);
+  /* calling function */
+  top = lua_gettop(L);
+  lua_call(L, nvars - 1, LUA_MULTRET);
+  int nresults = lua_gettop(L) - top + nvars;
+  /* serialize results */
+  if (nresults > 0)
+    lua_serialize(L, -(nresults), -1);
+  else
     lua_pushnil(L);
-    while (lua_next(L, -2)) {
-      copy(L1, L, -2, top);
-      copy(L1, L, -1, top);
-      lua_rawset(L1, -3);
-      lua_pop(L, 1);
-    }
-    lua_pop(L, 1);
-    if (lua_getmetatable(L, idx)) {
-      copy(L1, L, -1, top);
-      lua_setmetatable(L1, -2);
-      lua_pop(L, 1);
-    }
-    break;
-  }
-    case LUA_TFUNCTION: {
-      if (lua_iscfunction(L, idx)) {
-        lua_pushcfunction(L1, lua_tocfunction(L, idx));
-        break;
-      }
-      luaL_Buffer b;
-      luaL_buffinit(L, &b);
-      lua_pushvalue(L, idx);
-    if (lua_dump(L, writer, &b, 0))
-      luaL_error(L, _("cannot serialize function"));
-      luaL_pushresult(&b);
-      size_t l;
-      const char *s = lua_tolstring(L, -1, &l);
-      if (luaL_loadbuffer(L1, s, l, "")) {
-        s = lua_tolstring(L1, -1, &l);
-        lua_pushlstring(L, s, l);
-        lua_error(L);
-      }
-      lua_pop(L, 2);
-      break;
-    }
-  case LUA_TLIGHTUSERDATA:
-    lua_pushlightuserdata(L1, (void*) lua_topointer(L, idx));
-    break;
-  default:
-    luaL_error(L, _("cannot serialize"));
-    break;
-  }
+  return 1;
 }
 
 
 static void* thread_proc (void *par) {
-  LThread *t = (LThread *) par;
-  int top = lua_gettop(t->L);
-  t->status = lua_pcall(t->L, t->nvars, LUA_MULTRET, 0);
-  t->nresults = lua_gettop(t->L) - top + t->nvars + 1; /* nvars + func */
-  MUTEX_lock(&t->mutex);
-  t->running = 0;
-  MUTEX_unlock(&t->mutex);
+  ThreadState *ts = (ThreadState *) par;
+  /* todo something */
+  lua_pushcfunction(ts->L, thread_call);
+  lua_pushlightuserdata(ts->L, ts);
+  ts->status = lua_pcall(ts->L, 1, 1, 0);
+  /* running = false */
+  MUTEX_lock(&ts->mutex);
+  ts->running = 0;
+  MUTEX_unlock(&ts->mutex);
   return NULL;
 }
 
 
-static int copy_values (lua_State *L) {
-  luaL_openlibs(L);
-  lua_State *L1 = (lua_State *) lua_touserdata(L, 1);
-  int idx = (int) lua_tointeger(L, 2);
-  int count = (int) lua_tointeger(L, 3);
-  lua_newtable(L);
-  int top = lua_gettop(L);
-  int i, nvars = 0;
-  for (i = idx; i <= count; i++) {
-    nvars++;
-    copy(L, L1, i, top);
-  }
-  lua_remove(L, top);
-  return nvars;
-}
-
-
-static int create (lua_State *L, int idx) {
+static ThreadState * create (lua_State *L, int idx) {
   luaL_checktype(L, idx, LUA_TFUNCTION);
   int count = lua_gettop(L);
-  
-  lua_State *L1 = luaL_newstate();
-  if (L1 == NULL)
-  luaL_error(L, _("cannot create state: not enough memory"));
-
-  lua_pushcfunction(L1, copy_values);
-  lua_pushlightuserdata(L1, L);
-  lua_pushinteger(L1, idx);
-  lua_pushinteger(L1, count);
-  if (lua_pcall(L1, 3, LUA_MULTRET, 0)) {
-    lua_close(L1);
-    luaL_error(L, _("cannot serialize variables"));
-  }
-  
-  LThread *t = (LThread*) lua_newuserdata(L, sizeof(LThread));
-  t->L = L1;
-  t->nvars = count - idx;
-  t->status = 1;
-  t->nresults = 0;
-  MUTEX_init(&t->mutex);
-  t->running = 0;
-  t->interrupted = 0;
-  luaL_setmetatable(L, LUA_THREADHANDLE);
-  MUTEX_lock(&t->mutex);
+  ThreadState *ts = (ThreadState *) lua_newuserdata(L, sizeof(ThreadState));
+  ts->L = luaL_newstate();
+  if (ts->L == NULL)
+    luaL_error(L, _("cannot create state: not enough memory"));
+  ts->var = NULL;
+  ts->varsize = 0;
+  ts->status = 1;
 #ifdef _WIN32
-  DWORD threadId;
-  t->thread = CreateThread(NULL, 0x10000, (LPTHREAD_START_ROUTINE) thread_proc, t, 0, &threadId);
-  t->running = (t->thread != NULL);
+  ts->threadId = 0;
+  ts->thread = NULL;
+#endif
+  ts->running = 0;
+  ts->interrupted = 0;
+  MUTEX_init(&ts->mutex);
+  COND_init(&ts->cond);
+  ts->gcfree = 1;
+  luaL_setmetatable(L, LUA_THREADHANDLE);
+  /* serialize variables */
+  lua_serialize(L, idx, count);
+  const char *s = lua_tolstring(L, -1, &ts->varsize);
+  ts->var = (char *) malloc(sizeof(char) * ts->varsize);
+  if (ts->var == NULL)
+    luaL_error(L, _("not enough memory"));
+  memcpy(ts->var, s, ts->varsize);
+  lua_pop(L, 1);
+  /* create thread */
+  MUTEX_lock(&ts->mutex);
+#ifdef _WIN32
+  ts->thread = CreateThread(NULL, 0x10000, (LPTHREAD_START_ROUTINE) thread_proc, ts, 0, &ts->threadId);
+  ts->running = (ts->thread != NULL);
 #else
   pthread_attr_t attr;
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-  t->running = (pthread_create(&t->thread, &attr, thread_proc, t) == 0);
+  ts->running = (pthread_create(&ts->thread, &attr, thread_proc, ts) == 0);
   pthread_attr_destroy(&attr);
 #endif
-  if (!t->running) {
-    MUTEX_unlock(&t->mutex);
+  if (!ts->running) {
+    MUTEX_unlock(&ts->mutex);
     luaL_error(L, _("cannot create thread"));
   }
-  MUTEX_unlock(&t->mutex);
+  MUTEX_unlock(&ts->mutex);
+  return ts;
+}
+
+
+static int tnew (lua_State *L) {
+  create(L, 1);
   return 1;
 }
 
 
-static int createthread (lua_State *L) {
-  return create(L, 1);
+static int tpool (lua_State *L) {
+  PoolState *ps = (PoolState *) lua_newuserdata(L, sizeof(PoolState));
+  ps->arr = NULL;
+  ps->arrsize = 0;
+  luaL_setmetatable(L, LUA_POOLHANDLE);
+  return 1;
 }
 
 
-static int join (lua_State *L) {
-  LThread *t = (LThread*) luaL_checkudata(L, 1, LUA_THREADHANDLE);
-  MUTEX_lock(&t->mutex);
-  if (t->running) {
-    MUTEX_unlock(&t->mutex);
+static int padd (lua_State *L) {
+  PoolState *ps = (PoolState *) luaL_checkudata(L, 1, LUA_POOLHANDLE);
+  ThreadState *arr = (ThreadState *) realloc(ps->arr, sizeof(ThreadState) * (ps->arrsize + 1));
+  if (arr == NULL)
+      return luaL_error(L, _("not enough memory"));
+  ps->arr = arr;
+  ThreadState *ts = create(L, 2);
+  ts->gcfree = 0;
+  ps->arr[ps->arrsize - 1] = *ts;
+  ps->arrsize++;
+  return 1;
+}
+
+
+static int tjoin (lua_State *L) {
+  ThreadState *ts = (ThreadState *) luaL_checkudata(L, 1, LUA_THREADHANDLE);
+  MUTEX_lock(&ts->mutex);
+  if (ts->running) {
+    MUTEX_unlock(&ts->mutex);
   #ifdef _WIN32
-    WaitForSingleObject(t->thread, INFINITE);
-    CloseHandle(t->thread);
+    WaitForSingleObject(ts->thread, INFINITE);
   #else
-    pthread_join(t->thread, NULL);
+    pthread_join(ts->thread, NULL);
   #endif
-    MUTEX_lock(&t->mutex);
-    t->running = 0;
+    MUTEX_lock(&ts->mutex);
+    ts->running = 0;
   }
-  MUTEX_unlock(&t->mutex);
-  lua_newtable(L);
-  int i, top = lua_gettop(L);
-  lua_pushboolean(L, (t->status == 0));
-  for (i = t->nresults; i >= 1; i--)
-    copy(L, t->L, -i, top);
-  lua_remove(L, top);
-  return t->nresults + 1;
+  MUTEX_unlock(&ts->mutex);
+  size_t l;
+  const char *s;
+  if (ts->status) {
+    /* if fail then copy error message to main thread */
+    lua_pushboolean(L, 0);
+    s = lua_tolstring(ts->L, -1, &l);
+    lua_pushlstring(L, s, l);
+    return 2;
+  } else {
+    int nresults = 1;
+    /* if success then copy result to main thread */
+    lua_pushboolean(L, 1);
+    if (lua_isstring(ts->L, -1)) {
+      s = lua_tolstring(ts->L, -1, &l);
+      lua_pushlstring(L, s, l);
+      int top = lua_gettop(L);
+      nresults += lua_deserialize(L, -1);
+      lua_remove(L, top);
+    }
+    return nresults;
+  }
 }
 
 
-static int running (lua_State *L) {
-  LThread *t = (LThread*) luaL_checkudata(L, 1, LUA_THREADHANDLE);
-  lua_pushboolean(L, (t->running > 0));
-  return 1;
-}
-
-
-static int interrupt (lua_State *L) {
-  LThread *t = (LThread*) luaL_checkudata(L, 1, LUA_THREADHANDLE);
-  t->interrupted = 1;
-  return 1;
-}
-
-
-static int interrupted (lua_State *L) {
-  LThread *t = (LThread*) luaL_checkudata(L, 1, LUA_THREADHANDLE);
-  lua_pushboolean(L, (t->interrupted > 0));
-  return 1;
-}
-
-
-static int closethread (lua_State *L) {
-  LThread *t = (LThread*) luaL_checkudata(L, 1, LUA_THREADHANDLE);
-  join(L);
-  MUTEX_destroy(&t->mutex);
-  lua_close(t->L);
+static int tcancel (lua_State *L) {
+  ThreadState *ts = (ThreadState *) luaL_checkudata(L, 1, LUA_THREADHANDLE);
+  lua_cancel(ts->L);
+  MUTEX_lock(&ts->mutex);
+  COND_broadcast(&ts->cond);
+  MUTEX_unlock(&ts->mutex);
   return 0;
+}
+
+static int trunning (lua_State *L) {
+  ThreadState *ts = (ThreadState *) luaL_checkudata(L, 1, LUA_THREADHANDLE);
+  lua_pushboolean(L, ts->running);
+  return 1;
+}
+
+
+static int tinterrupt (lua_State *L) {
+  ThreadState *ts = (ThreadState *) luaL_checkudata(L, 1, LUA_THREADHANDLE);
+  MUTEX_lock(&ts->mutex);
+  ts->interrupted = 1;
+  COND_broadcast(&ts->cond);
+  MUTEX_unlock(&ts->mutex);
+  return 0;
+}
+
+
+static int tinterrupted (lua_State *L) {
+  ThreadState *ts;
+  if (lua_gettop(L) > 0)
+    ts = (ThreadState *) luaL_checkudata(L, 1, LUA_THREADHANDLE);
+  else {
+    lua_getfield(L, LUA_REGISTRYINDEX, LUA_THREAD_USERDATA);
+    if (lua_isnil(L, -1))
+      return luaL_error(L, _("not implement to main thread"));
+    else {
+      ts = (ThreadState *) lua_topointer(L, -1);
+      lua_pop(L, 1);
+    }
+  }
+  MUTEX_lock(&ts->mutex);
+  int interrupted = ts->interrupted;
+  MUTEX_unlock(&ts->mutex);
+  lua_pushboolean(L, interrupted);
+  return 1;
+}
+
+
+static int tid (lua_State *L) {
+  if (lua_gettop(L) > 0) {
+    ThreadState *ts = (ThreadState *) luaL_checkudata(L, 1, LUA_THREADHANDLE);
+  #ifdef _WIN32
+    lua_pushinteger(L, (lua_Integer) ts->threadId);
+  #else
+    lua_pushinteger(L, (lua_Integer) ts->thread);
+  #endif
+  } else
+    lua_pushinteger(L, (lua_Integer) THREAD_id());
+  return 1;
+}
+
+
+static int ttime (lua_State *L) {
+#ifdef _WIN32
+	SYSTEMTIME time;
+	GetLocalTime(&time);
+	lua_pushinteger(L, (lua_Integer) ((time.wHour * 3600 + time.wMinute * 60 + time.wSecond) * 1000 + time.wMilliseconds));
+#else
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	lua_pushinteger(L, (lua_Integer) (tv.tv_sec * 1000) + (tv.tv_usec / 1000));
+#endif
+  return 1;
+}
+
+
+static int tsleep (lua_State *L) {
+  lua_Integer timeout = luaL_checkinteger(L, 1);
+  if (timeout <= 0)
+    return 0;
+  lua_getfield(L, LUA_REGISTRYINDEX, LUA_THREAD_USERDATA);
+  if (lua_isnil(L, -1)) {
+    lua_pop(L, 1);
+  #ifdef _WIN32
+    Sleep((DWORD) timeout);
+  #else
+    struct timespec ts;
+    ts.tv_sec = 0;
+    ts.tv_nsec = timeout * 1000000;
+    nanosleep(&ts, NULL);
+  #endif
+  } else {
+    ThreadState *ts = (ThreadState *) lua_topointer(L, -1);
+    lua_pop(L, 1);
+    MUTEX_lock(&ts->mutex);
+    COND_waitfor(&ts->cond, &ts->mutex, timeout);
+    MUTEX_unlock(&ts->mutex);
+  }
+  return 0;
+}
+
+
+static void freethread (ThreadState *ts) {
+  MUTEX_lock(&ts->mutex);
+  if (ts->running) {
+    lua_cancel(ts->L);
+    COND_broadcast(&ts->cond);
+    MUTEX_unlock(&ts->mutex);
+  #ifdef _WIN32
+    WaitForSingleObject(ts->thread, INFINITE);
+  #else
+    pthread_join(ts->thread, NULL);
+  #endif
+  } else
+    MUTEX_unlock(&ts->mutex);
+#ifdef _WIN32
+  if (ts->thread)
+    CloseHandle(ts->thread);
+#endif
+  MUTEX_destroy(&ts->mutex);
+  COND_destroy(&ts->cond);
+  lua_close(ts->L);
+  if (ts->var)
+    free(ts->var);
+}
+
+static int tgc (lua_State *L) {
+  ThreadState *ts = (ThreadState *) luaL_checkudata(L, 1, LUA_THREADHANDLE);
+  if (ts->gcfree)
+    freethread(ts);
+  return 0;
+}
+
+
+static int pgc (lua_State *L) {
+  PoolState *ps = (PoolState *) luaL_checkudata(L, 1, LUA_POOLHANDLE);
+  if (ps->arr) {
+    size_t i;
+    ThreadState *ts = ps->arr;
+    for (i = 0; i < ps->arrsize; i++, ts++)
+      freethread(ts);
+    free(ps->arr);
+  }
+  return 1;
 }
 
 
@@ -336,11 +435,16 @@ static int closethread (lua_State *L) {
 ** functions for 'thread' library
 */
 static const luaL_Reg threadlib[] = {
-  {"new", createthread},
-  {"join", join},
-  {"running", running},
-  {"interrupt", interrupt},
-  {"interrupted", interrupted},
+  {"new", tnew},
+  {"pool", tpool},
+  {"join", tjoin},
+  {"cancel", tcancel},
+  {"running", trunning},
+  {"interrupt", tinterrupt},
+  {"interrupted", tinterrupted},
+  {"id", tid},
+  {"time", ttime},
+  {"sleep", tsleep},
   {NULL, NULL}
 };
 
@@ -349,26 +453,41 @@ static const luaL_Reg threadlib[] = {
 ** methods for thread handles
 */
 static const luaL_Reg tlib[] = {
-  {"join", join},
-  {"running", running},
-  {"interrupt", interrupt},
-  {"interrupted", interrupted},
-  {"__gc", closethread},
+  {"join", tjoin},
+  {"cancel", tcancel},
+  {"running", trunning},
+  {"interrupt", tinterrupt},
+  {"interrupted", tinterrupted},
+  {"id", tid},
+  {"__gc", tgc},
+  {NULL, NULL}
+};
+
+
+static const luaL_Reg plib[] = {
+  {"add", padd},
+  {"__gc", pgc},
   {NULL, NULL}
 };
 
 
 static void createmeta (lua_State *L) {
-  luaL_newmetatable(L, LUA_THREADHANDLE);  /* create metatable for file handles */
+  luaL_newmetatable(L, LUA_THREADHANDLE);  /* create metatable for thread handles */
   lua_pushvalue(L, -1);  /* push metatable */
   lua_setfield(L, -2, "__index");  /* metatable.__index = metatable */
   luaL_setfuncs(L, tlib, 0);  /* add file methods to new metatable */
+  lua_pop(L, 1);  /* pop new metatable */
+  luaL_newmetatable(L, LUA_POOLHANDLE);  /* create metatable for pool handles */
+  lua_pushvalue(L, -1);  /* push metatable */
+  lua_setfield(L, -2, "__index");  /* metatable.__index = metatable */
+  luaL_setfuncs(L, plib, 0);  /* add file methods to new metatable */
   lua_pop(L, 1);  /* pop new metatable */
 }
 
 
 static int tcall (lua_State *L) {
-  return create(L, 2);
+  create(L, 2);
+  return 1;
 }
 
 

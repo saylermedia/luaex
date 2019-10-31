@@ -1,10 +1,42 @@
+The Lua programming language with CMake based build and with extreme functional
+How to build:
+
+mkdir tmp
+cd tmp
+Unpacking luaex to current dir (tmp)
+mkdir build
+cd build
+
+--------------------------------------------------------------
+Windows
+--------------------------------------------------------------
+
+MS Visual Studio (Use command prompt):
+cmake ../luaex
+cmake --build . --config Release
+cmake --build . --config Release --target install
+
+or
+
 cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release ../luaex
-cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release ../luaex
-cmake -DCMAKE_BUILD_TYPE=Release ../luaex
+nmake
+nmake install
+
+or
+
+cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release ../luaex
 cmake --build .
 cmake --build . --target install
 
-cmake -DCMAKE_BUILD_TYPE=Release ../luaex
+MinGW:
+cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release ../luaex
+cmake --build .
+cmake --build . --target install
 
-cmake -G "Visual Studio 14 2015" ../luaex
+---------------------------------------------------------------
+Unix
+---------------------------------------------------------------
+cmake -DCMAKE_BUILD_TYPE=Release ../luaex
+cmake --build .
+cmake --build . --target install
 

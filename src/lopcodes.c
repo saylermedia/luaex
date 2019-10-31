@@ -135,7 +135,7 @@ LUA_API const char * luaP_opname (int i) {
   return luaP_opnames[i];
 }
 
-LUA_API const lu_byte luaP_opmode (int i) {
+LUA_API lu_byte luaP_opmode (int i) {
   return luaP_opmodes[i];
 }
 #endif

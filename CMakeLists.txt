@@ -1,3 +1,6 @@
+# See Agreement in LICENSE
+# Copyright (C) 2019, Alexey Smirnov <saylermedia@gmail.com>
+
 cmake_minimum_required(VERSION 3.4.1)
 project(lua)
 
@@ -39,4 +42,17 @@ add_subdirectory(src)
 if(NOT WIN32)
 	install(FILES doc/lua.1 doc/luac.1 DESTINATION share/man/man1)
 endif()
+
+set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
+set(CPACK_PACKAGE_CONTACT "Alexey Smirnov <saylermedia@gmail.com>")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
+set(CPACK_PACKAGE_VERSION "${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}")
+include(CPack)
+
+enable_testing()
+file(GLOB _FILES ${CMAKE_SOURCE_DIR}/examples/*.lua)
+foreach(_FILE ${_FILES})
+	get_filename_component(_NAME "${_FILE}" NAME)
+	add_test(NAME ${_NAME} COMMAND $<TARGET_FILE:lua> ${_FILE} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/examples)
+endforeach()
 

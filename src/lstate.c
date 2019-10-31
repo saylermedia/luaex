@@ -279,6 +279,9 @@ LUA_API lua_State *lua_newthread (lua_State *L) {
   L1->sscall = L->sscall;
   L1->sccall = L->sccall;
 #endif
+#ifdef LUAEX_THREADLIB
+  L1->canceled = L->canceled;
+#endif
   resethookcount(L1);
   /* initialize L1 extra space */
   memcpy(lua_getextraspace(L1), lua_getextraspace(g->mainthread),
@@ -314,6 +317,9 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   L->side = LUAEX_SBOTH;
   L->sscall = NULL;
   L->sccall = NULL;
+#endif
+#ifdef LUAEX_THREADLIB
+  L->canceled = 0;
 #endif
   g->currentwhite = bitmask(WHITE0BIT);
   L->marked = luaC_white(g);
@@ -368,7 +374,14 @@ LUA_API void lua_setside (lua_State *L, int side, lua_CFunction scall, lua_CFunc
 }
 
 
-LUA_API int lua_side (lua_State *L) {
+LUA_API int lua_getside (lua_State *L) {
   return L->side;
+}
+#endif
+
+
+#ifdef LUAEX_THREADLIB
+LUA_API void lua_cancel (lua_State *L) {
+  L->canceled = 1;
 }
 #endif

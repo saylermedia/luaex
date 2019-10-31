@@ -301,7 +301,7 @@ LUAI_DDEC const char *const luaP_opnames[NUM_OPCODES+1];  /* opcode names */
 
 #ifdef LUAEX_BASE
 LUA_API const char * (luaP_opname) (int i);
-LUA_API const lu_byte (luaP_opmode) (int i);
+LUA_API lu_byte (luaP_opmode) (int i);
 #endif
 
 #endif

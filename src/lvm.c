@@ -804,6 +804,10 @@ void luaV_execute (lua_State *L) {
 #endif
   /* main loop of interpreter */
   for (;;) {
+  #ifdef LUAEX_THREADLIB
+    if (L->canceled)
+      luaG_runerror(L, "canceled");
+  #endif
     Instruction i;
     StkId ra;
     vmfetch();
@@ -845,7 +849,7 @@ void luaV_execute (lua_State *L) {
         TValue *upval = cl->upvals[GETARG_B(i)]->v;
         TValue *rc = RKC(i);
         gettableProtected(L, upval, rc, ra);
-	  #ifdef LUAEX_CLNTSRV
+      #ifdef LUAEX_CLNTSRV
         if (srvclnt) srvcltab = rc;
       #endif
         vmbreak;
@@ -861,7 +865,7 @@ void luaV_execute (lua_State *L) {
         TValue *rb = RKB(i);
         TValue *rc = RKC(i);
         settableProtected(L, upval, rb, rc);
-	  #ifdef LUAEX_CLNTSRV
+      #ifdef LUAEX_CLNTSRV
         if (srvcl) {
           setobj2n(L, &srvcl->upvalue[0], rb); /* save table name to upvalue */
           srvcl = NULL;
@@ -879,7 +883,7 @@ void luaV_execute (lua_State *L) {
         TValue *rb = RKB(i);
         TValue *rc = RKC(i);
         settableProtected(L, ra, rb, rc);
-	  #ifdef LUAEX_CLNTSRV
+      #ifdef LUAEX_CLNTSRV
         if (srvcl) {
           setobj2n(L, &srvcl->upvalue[1], rb); /* save method name to upvalue */
           srvcl = NULL;
