@@ -1,7 +1,7 @@
 # luaex
 The Lua programming language with CMake based build and with extreme functional
 
-* Added try...catch([e])...end, [example](https://github.com/saylermedia/luaex/blob/master/examples/try.lua)
+* Added try...catch([e])...end, see [try.lua](https://github.com/saylermedia/luaex/blob/master/examples/try.lua)
 * Added syntax constructs to support client-server architecture, for example:
 ```lua
 server function floor(x)
@@ -22,6 +22,6 @@ int main() {
   ...
 }
  ```
-* Added math table as metatable for number values, [example](https://github.com/saylermedia/luaex/blob/master/examples/number.lua)
-* Added serialize and deserialize functions, [example](https://github.com/saylermedia/luaex/blob/master/examples/serialize.lua)
-* Added native threads library, [example](https://github.com/saylermedia/luaex/blob/master/examples/thread.lua)
+* Added math table as metatable for number values, see [number.lua](https://github.com/saylermedia/luaex/blob/master/examples/number.lua)
+* Added serialize and deserialize functions, see [serialize.lua](https://github.com/saylermedia/luaex/blob/master/examples/serialize.lua)
+* Added native threads library, see [thread.lua](https://github.com/saylermedia/luaex/blob/master/examples/thread.lua)
