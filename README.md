@@ -1,14 +1,7 @@
 # luaex
 The Lua programming language with CMake based build and with extreme functional
 
-* Added try...catch([e])...end, for example:
-```lua
-try
-  error('Exception!')
-catch (e)
-  print(e)
-end
- ```
+* Added try...catch([e])...end, [example](https://github.com/saylermedia/luaex/blob/master/examples/try.lua)
 * Added syntax constructs to support client-server architecture, for example:
 ```lua
 server function floor(x)
@@ -29,22 +22,6 @@ int main() {
   ...
 }
  ```
-* Added math table as metatable for number values, for example:
-```lua
-local n = 555.325
-print(n:floor())
-print(tonumber("12.4555"):floor())
-```
-* Added serialize and deserialize functions, for example:
-```lua
-print(serialize(5192.444))
-print(deserialize(serialize(5192.444)))
-```
-also 'C':
-```C
-lua_pushinteger(L, 100500);
-lua_serialize(L, -1);
-printf("serialize %s\n", lua_tostring(L, -1));
-lua_deserialize(L, -1);
-printf("deserialize %lld\n", lua_tointeger(L, -1));
-```
+* Added math table as metatable for number values, [example](https://github.com/saylermedia/luaex/blob/master/examples/number.lua)
+* Added serialize and deserialize functions, [example](https://github.com/saylermedia/luaex/blob/master/examples/serialize.lua)
+* Added native threads library, [example](https://github.com/saylermedia/luaex/blob/master/examples/thread.lua)
