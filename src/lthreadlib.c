@@ -121,13 +121,12 @@ typedef struct ThreadState {
   volatile int interrupted;
   MUTEX mutex;
   COND cond;
-  int gcfree;
 } ThreadState;
 
 
 typedef struct PoolState {
-  ThreadState *arr;
-  size_t arrsize;
+  int *ref;
+  size_t refsize;
 } PoolState;
 
 
@@ -187,7 +186,6 @@ static ThreadState * create (lua_State *L, int idx) {
   ts->interrupted = 0;
   MUTEX_init(&ts->mutex);
   COND_init(&ts->cond);
-  ts->gcfree = 1;
   luaL_setmetatable(L, LUA_THREADHANDLE);
   /* serialize variables */
   lua_serialize(L, idx, count);
@@ -226,8 +224,8 @@ static int tnew (lua_State *L) {
 
 static int tpool (lua_State *L) {
   PoolState *ps = (PoolState *) lua_newuserdata(L, sizeof(PoolState));
-  ps->arr = NULL;
-  ps->arrsize = 0;
+  ps->ref = NULL;
+  ps->refsize = 0;
   luaL_setmetatable(L, LUA_POOLHANDLE);
   return 1;
 }
@@ -235,14 +233,14 @@ static int tpool (lua_State *L) {
 
 static int padd (lua_State *L) {
   PoolState *ps = (PoolState *) luaL_checkudata(L, 1, LUA_POOLHANDLE);
-  ThreadState *arr = (ThreadState *) realloc(ps->arr, sizeof(ThreadState) * (ps->arrsize + 1));
-  if (arr == NULL)
+  int *ref = (int *) realloc(ps->ref, sizeof(ThreadState) * (ps->refsize + 1));
+  if (ref == NULL)
       return luaL_error(L, _("not enough memory"));
-  ps->arr = arr;
+  ps->ref = ref;
   ThreadState *ts = create(L, 2);
-  ts->gcfree = 0;
-  ps->arr[ps->arrsize - 1] = *ts;
-  ps->arrsize++;
+  lua_pushvalue(L, -1);
+  ps->ref[ps->refsize] = luaL_ref(L, LUA_REGISTRYINDEX);
+  ps->refsize++;
   return 1;
 }
 
@@ -386,7 +384,8 @@ static int tsleep (lua_State *L) {
 }
 
 
-static void freethread (ThreadState *ts) {
+static int tgc (lua_State *L) {
+  ThreadState *ts = (ThreadState *) luaL_checkudata(L, 1, LUA_THREADHANDLE);
   MUTEX_lock(&ts->mutex);
   if (ts->running) {
     lua_cancel(ts->L);
@@ -408,24 +407,60 @@ static void freethread (ThreadState *ts) {
   lua_close(ts->L);
   if (ts->var)
     free(ts->var);
+  return 0;
 }
 
-static int tgc (lua_State *L) {
-  ThreadState *ts = (ThreadState *) luaL_checkudata(L, 1, LUA_THREADHANDLE);
-  if (ts->gcfree)
-    freethread(ts);
+
+static int plen (lua_State *L) {
+  PoolState *ps = (PoolState *) luaL_checkudata(L, 1, LUA_POOLHANDLE);
+  lua_pushinteger(L, ps->refsize);
+  return 1;
+}
+
+
+static int pindex (lua_State *L) {
+  PoolState *ps = (PoolState *) luaL_checkudata(L, 1, LUA_POOLHANDLE);
+  if (lua_type(L, 2) == LUA_TNUMBER) {
+    lua_Integer idx = luaL_checkinteger(L, 2);
+    luaL_argcheck(L, idx > 0 && idx <= ps->refsize, 1, "index out of range");
+    lua_rawgeti(L, LUA_REGISTRYINDEX, ps->ref[idx - 1]);
+  } else {
+    luaL_getmetatable(L, LUA_POOLHANDLE);
+    lua_pushvalue(L, 2);
+    lua_rawget(L, -2);
+    lua_remove(L, -2);
+  }
+  return 1;
+}
+
+
+static int pwait (lua_State *L) {
+  PoolState *ps = (PoolState *) luaL_checkudata(L, 1, LUA_POOLHANDLE);
+  if (ps->ref) {
+    for (;;) {
+      size_t i;
+      for (i = 0; i < ps->refsize; i++) {
+        lua_rawgeti(L, LUA_REGISTRYINDEX, ps->ref[i]);
+        ThreadState *ts = (ThreadState *) luaL_checkudata(L, -1, LUA_THREADHANDLE);
+        lua_pop(L, 1);
+        if (ts->running)
+          break;
+      }
+      if (i == ps->refsize)
+        break;
+    }
+  }
   return 0;
 }
 
 
 static int pgc (lua_State *L) {
   PoolState *ps = (PoolState *) luaL_checkudata(L, 1, LUA_POOLHANDLE);
-  if (ps->arr) {
+  if (ps->ref) {
     size_t i;
-    ThreadState *ts = ps->arr;
-    for (i = 0; i < ps->arrsize; i++, ts++)
-      freethread(ts);
-    free(ps->arr);
+    for (i = 0; i < ps->refsize; i++)
+      luaL_unref(L, LUA_REGISTRYINDEX, ps->ref[i]);
+    free(ps->ref);
   }
   return 1;
 }
@@ -466,6 +501,9 @@ static const luaL_Reg tlib[] = {
 
 static const luaL_Reg plib[] = {
   {"add", padd},
+  {"wait", pwait},
+  {"__len", plen},
+  {"__index", pindex},
   {"__gc", pgc},
   {NULL, NULL}
 };

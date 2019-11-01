@@ -88,9 +88,18 @@ thread.sleep(500)
 t:cancel()
 print('cancel:', t:join())
 
---local p = thread.pool()
---local t = p:add(loop)
---print(t:id())
+local p = thread.pool()
+local t = p:add(loop)
+print(t:id())
+print(#p, p[1], p[1]:id())
 
+local p = thread.pool()
+for i = 1, 10 do
+	p:add(fac, i)
+end
+p:wait()
+for i = 1, #p do
+	print(i, p[i]:join())
+end
 
 
