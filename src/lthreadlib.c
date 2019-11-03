@@ -255,7 +255,7 @@ static int padd (lua_State *L) {
   MUTEX_lock(&ps->mutex);
   ps->nref++;
   MUTEX_unlock(&ps->mutex);
-  ThreadState *ts = create(L, 2, ps);
+  create(L, 2, ps);
   lua_pushvalue(L, -1);
   ps->ref[ps->refsize] = luaL_ref(L, LUA_REGISTRYINDEX);
   ps->refsize++;
@@ -439,7 +439,7 @@ static int plen (lua_State *L) {
 static int pindex (lua_State *L) {
   PoolState *ps = (PoolState *) luaL_checkudata(L, 1, LUA_POOLHANDLE);
   if (lua_type(L, 2) == LUA_TNUMBER) {
-    lua_Integer idx = luaL_checkinteger(L, 2);
+    size_t idx = (size_t) luaL_checkinteger(L, 2);
     luaL_argcheck(L, idx > 0 && idx <= ps->refsize, 1, "index out of range");
     lua_rawgeti(L, LUA_REGISTRYINDEX, ps->ref[idx - 1]);
   } else {

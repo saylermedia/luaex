@@ -9,6 +9,7 @@
 
 #include "lua.h"
 
+
 /* running on side: server, client or both */
 #ifdef LUAEX_CLNTSRV
 #define LUAEX_SBOTH 0
