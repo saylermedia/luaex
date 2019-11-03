@@ -108,6 +108,15 @@ static int COND_waitfor (COND *cond, MUTEX *mutex, unsigned long msec) {
 #define LUA_THREAD_USERDATA "_THREAD"
 
 
+typedef struct PoolState {
+  MUTEX mutex;
+  COND cond;
+  int nref;
+  int *ref;
+  size_t refsize;
+} PoolState;
+
+
 typedef struct ThreadState {
   lua_State *L;
   char *var;
@@ -121,13 +130,8 @@ typedef struct ThreadState {
   volatile int interrupted;
   MUTEX mutex;
   COND cond;
+  PoolState *ps;
 } ThreadState;
-
-
-typedef struct PoolState {
-  int *ref;
-  size_t refsize;
-} PoolState;
 
 
 static int thread_call (lua_State *L) {
@@ -164,11 +168,18 @@ static void* thread_proc (void *par) {
   MUTEX_lock(&ts->mutex);
   ts->running = 0;
   MUTEX_unlock(&ts->mutex);
+  if (ts->ps) {
+    PoolState *ps = ts->ps;
+    MUTEX_lock(&ps->mutex);
+    ps->nref--;
+    COND_broadcast(&ps->cond);
+    MUTEX_unlock(&ps->mutex);
+  }
   return NULL;
 }
 
 
-static ThreadState * create (lua_State *L, int idx) {
+static ThreadState * create (lua_State *L, int idx, PoolState *ps) {
   luaL_checktype(L, idx, LUA_TFUNCTION);
   int count = lua_gettop(L);
   ThreadState *ts = (ThreadState *) lua_newuserdata(L, sizeof(ThreadState));
@@ -184,6 +195,7 @@ static ThreadState * create (lua_State *L, int idx) {
 #endif
   ts->running = 0;
   ts->interrupted = 0;
+  ts->ps = ps;
   MUTEX_init(&ts->mutex);
   COND_init(&ts->cond);
   luaL_setmetatable(L, LUA_THREADHANDLE);
@@ -217,13 +229,16 @@ static ThreadState * create (lua_State *L, int idx) {
 
 
 static int tnew (lua_State *L) {
-  create(L, 1);
+  create(L, 1, NULL);
   return 1;
 }
 
 
 static int tpool (lua_State *L) {
   PoolState *ps = (PoolState *) lua_newuserdata(L, sizeof(PoolState));
+  MUTEX_init(&ps->mutex);
+  COND_init(&ps->cond);
+  ps->nref = 0;
   ps->ref = NULL;
   ps->refsize = 0;
   luaL_setmetatable(L, LUA_POOLHANDLE);
@@ -237,7 +252,10 @@ static int padd (lua_State *L) {
   if (ref == NULL)
       return luaL_error(L, _("not enough memory"));
   ps->ref = ref;
-  ThreadState *ts = create(L, 2);
+  MUTEX_lock(&ps->mutex);
+  ps->nref++;
+  MUTEX_unlock(&ps->mutex);
+  ThreadState *ts = create(L, 2, ps);
   lua_pushvalue(L, -1);
   ps->ref[ps->refsize] = luaL_ref(L, LUA_REGISTRYINDEX);
   ps->refsize++;
@@ -434,21 +452,65 @@ static int pindex (lua_State *L) {
 }
 
 
+static int pairs_next (lua_State *L) {
+  PoolState *ps = (PoolState *) luaL_checkudata(L, lua_upvalueindex(1), LUA_POOLHANDLE);
+  size_t i = (size_t) luaL_checkinteger(L, lua_upvalueindex(2));
+  if (i < ps->refsize) {
+    lua_pushinteger(L, i + 1);
+    lua_replace(L, lua_upvalueindex(2));
+    lua_rawgeti(L, LUA_REGISTRYINDEX, ps->ref[i]);
+    return 1;
+  }
+  return 0;
+}
+
+
+static int ppairs (lua_State *L) {
+  luaL_checkudata(L, 1, LUA_POOLHANDLE);
+  lua_pushvalue(L, 1);
+  lua_pushinteger(L, 0);
+  lua_pushcclosure(L, pairs_next, 2);
+  return 1;
+}
+
+
 static int pwait (lua_State *L) {
   PoolState *ps = (PoolState *) luaL_checkudata(L, 1, LUA_POOLHANDLE);
-  if (ps->ref) {
-    for (;;) {
-      size_t i;
-      for (i = 0; i < ps->refsize; i++) {
-        lua_rawgeti(L, LUA_REGISTRYINDEX, ps->ref[i]);
-        ThreadState *ts = (ThreadState *) luaL_checkudata(L, -1, LUA_THREADHANDLE);
-        lua_pop(L, 1);
-        if (ts->running)
-          break;
-      }
-      if (i == ps->refsize)
-        break;
-    }
+  MUTEX_lock(&ps->mutex);
+  while (ps->nref > 0)
+    COND_wait(&ps->cond, &ps->mutex);
+  MUTEX_unlock(&ps->mutex);
+  return 0;
+}
+
+
+static int pinterrupt (lua_State *L) {
+  PoolState *ps = (PoolState *) luaL_checkudata(L, 1, LUA_POOLHANDLE);
+  size_t i;
+  for (i = 0; i < ps->refsize; i++) {
+    lua_rawgeti(L, LUA_REGISTRYINDEX, ps->ref[i]);
+    ThreadState *ts = (ThreadState *) luaL_checkudata(L, -1, LUA_THREADHANDLE);
+    lua_pop(L, 1);
+    MUTEX_lock(&ts->mutex);
+    ts->interrupted = 1;
+    COND_broadcast(&ts->cond);
+    MUTEX_unlock(&ts->mutex);
+  }
+  return 0;
+}
+
+
+static int pcancel (lua_State *L) {
+  PoolState *ps = (PoolState *) luaL_checkudata(L, 1, LUA_POOLHANDLE);
+  size_t i;
+  for (i = 0; i < ps->refsize; i++) {
+    lua_rawgeti(L, LUA_REGISTRYINDEX, ps->ref[i]);
+    ThreadState *ts = (ThreadState *) luaL_checkudata(L, -1, LUA_THREADHANDLE);
+    lua_pop(L, 1);
+    lua_cancel(ts->L);
+    MUTEX_lock(&ts->mutex);
+    COND_broadcast(&ts->cond);
+    MUTEX_unlock(&ts->mutex);
   }
   return 0;
 }
@@ -456,6 +518,8 @@ static int pwait (lua_State *L) {
 
 static int pgc (lua_State *L) {
   PoolState *ps = (PoolState *) luaL_checkudata(L, 1, LUA_POOLHANDLE);
+  MUTEX_destroy(&ps->mutex);
+  COND_destroy(&ps->cond);
   if (ps->ref) {
     size_t i;
     for (i = 0; i < ps->refsize; i++)
@@ -502,8 +566,11 @@ static const luaL_Reg tlib[] = {
 static const luaL_Reg plib[] = {
   {"add", padd},
   {"wait", pwait},
+  {"interrupt", pinterrupt},
+  {"cancel", pcancel},
   {"__len", plen},
   {"__index", pindex},
+  {"__pairs", ppairs},
   {"__gc", pgc},
   {NULL, NULL}
 };
@@ -524,7 +591,7 @@ static void createmeta (lua_State *L) {
 
 
 static int tcall (lua_State *L) {
-  create(L, 2);
+  create(L, 2, NULL);
   return 1;
 }
 

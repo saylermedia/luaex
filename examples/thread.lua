@@ -7,11 +7,16 @@
   -- thread.join(t) - join thread, return status (true or false) and results (if status true) or error (if status false)
   -- thread.cancel(t) - cancel execution
   -- thread.running(t) - thread is running
-  -- thread.interrupt(t) - set interrupted flag to true
+  -- thread.interrupt() - set interrupted flag to true
   -- thread.interrupted([t]) - flag is interrupted
   -- thread.id([t]) - get current thread id
   -- thread.time() - get current time in milliseconds
   -- thread.sleep(time) - pause in milliseconds
+  -- thread.pool() - create thread pool, return pool object
+    -- :add(f, ...) - call function f(...) in new thread and store to pool, return thread object
+    -- :wait() - wait until all threads are completed
+    -- :interrupt() - set interrupted flag to true for all threads
+    -- :cancel() - cancel execution for all threads
 
   -- join, running, interrupt, interrupted, id is thread object methods.
   -- in called function to all arguments or local variables is serialized copies.
@@ -53,25 +58,20 @@ local function fac(x)
   return x * fac(x - 1)
 end
 
-local ar = {}
+
+local pool = thread.pool()
 for i = 1, 10 do
-  table.insert(ar, thread(fac, i))
+  print('new thread fac(' .. i .. ')') 
+  pool:add(fac, i)
 end
 
-local cont = true
-while cont do
-  cont = false
-  for _, v in ipairs(ar) do
-    if v:running() then
-      cont = true
-      break
-    end
-  end
-end
+print('wait until all threads are completed') 
+pool:wait()
 
+print('result:')
 print('value', 'id', 'status', 'result')
-for k, v in ipairs(ar) do
-  print(k, v:id(), v:join())
+for i = 1, #pool do
+  print(i, pool[i]:id(), pool[i]:join())
 end
 
 print()
@@ -87,19 +87,3 @@ local t = thread(loop)
 thread.sleep(500)
 t:cancel()
 print('cancel:', t:join())
-
-local p = thread.pool()
-local t = p:add(loop)
-print(t:id())
-print(#p, p[1], p[1]:id())
-
-local p = thread.pool()
-for i = 1, 10 do
-  p:add(fac, i)
-end
-p:wait()
-for i = 1, #p do
-  print(i, p[i]:join())
-end
-
-
