@@ -171,6 +171,7 @@ static const luaL_Reg nlib[] = {
   {"abs", nabs},
   {"floor", nfloor},
   {"ceil", nceil},
+  {"eq", neq},
   {"__add", nadd},
   {"__sub", nsub},
   {"__mul", nmul},
