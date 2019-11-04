@@ -782,8 +782,17 @@
 ** without modifying the main part of the file.
 */
 
-
-
+/*
+** Lua Extreme addition
+** See Agreement in LICENSE
+** Copyright (C) 2019, Alexey Smirnov <saylermedia@gmail.com>
+*/
+#cmakedefine LUAEX_BASE
+#cmakedefine LUAEX_TRYCATCH
+#cmakedefine LUAEX_CLNTSRV
+#cmakedefine LUAEX_SERIALIZE
+#cmakedefine LUAEX_THREADLIB
+#cmakedefine LUAEX_MPDECIMAL
 
 
 #endif

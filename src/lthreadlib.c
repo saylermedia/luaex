@@ -4,26 +4,22 @@
 ** Copyright (C) 2019, Alexey Smirnov <saylermedia@gmail.com>
 */
 
-#ifdef LUAEX_THREADLIB
-#ifndef LUAEX_SERIALIZE
-#error "added -DLUAEX_SERIALIZE to compile options"
-#endif
 #define threadlib_c
 #define LUA_LIB
 
 #include "lprefix.h"
 
-#include <math.h>
-#include <malloc.h>
-#include <string.h>
-
 #include "lua.h"
 
 #include "lauxlib.h"
 #include "lualib.h"
-#include "luaex.h"
 
 #define _(x) x
+
+#ifdef LUAEX_THREADLIB
+#include <math.h>
+#include <malloc.h>
+#include <string.h>
 
 #ifdef _WIN32
 /* windows threads */

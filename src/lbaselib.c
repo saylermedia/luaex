@@ -19,9 +19,6 @@
 
 #include "lauxlib.h"
 #include "lualib.h"
-#ifdef LUAEX_SERIALIZE
-#include "luaex.h"
-#endif
 
 
 static int luaB_print (lua_State *L) {

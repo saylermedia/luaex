@@ -14,9 +14,6 @@
 #include <string.h>
 
 #include "lua.h"
-#ifdef LUAEX_CLNTSRV
-#include "luaex.h"
-#endif
 
 #include "lapi.h"
 #include "ldebug.h"

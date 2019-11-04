@@ -10,11 +10,13 @@ set(SOURCES lapi.c lcode.c lctype.c ldebug.c ldo.c ldump.c lfunc.c lgc.c
   lserialize.c lthreadlib.c lmpdeclib.c)
 
 set_source_files_properties(${SOURCES} lua.c luac.c PROPERTIES C_STANDARD 99)
-add_definitions(-DLUAEX_BASE)
+configure_file("luaconf.h.in" "luaconf.h")
 
 if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS)
 endif()
+
+set(LUA_LIBS "")
 
 if(BUILD_SHARED_LIBS)
   add_library(liblua SHARED ${SOURCES})
@@ -23,7 +25,7 @@ if(BUILD_SHARED_LIBS)
     target_compile_definitions(liblua PUBLIC LUA_COMPAT_5_2 PRIVATE LUA_BUILD_AS_DLL)
   else()
     target_compile_definitions(liblua PUBLIC LUA_COMPAT_5_2)
-    target_link_libraries(liblua PUBLIC m)
+    list(APPEND LUA_LIBS m)
   endif()
   declare_shared("lua${LUA_VERSION_SUFFIX}")
 else()
@@ -33,24 +35,20 @@ else()
   declare_static("lua")
 endif()
 
-foreach(NAME LUAEX_TRYCATCH LUAEX_CLNTSRV LUAEX_SERIALIZE LUAEX_THREADLIB LUAEX_MPDECIMAL)
-  if(${${NAME}})
-    target_compile_definitions(liblua PUBLIC ${NAME})
-  endif()
-endforeach()
-
 if(LUAEX_MPDECIMAL)
-  target_link_libraries(liblua mpdec)
+  list(APPEND LUA_LIBS mpdec)
 endif()
+
+target_link_libraries(liblua PUBLIC ${LUA_LIBS})
 
 if(ANDROID)
   target_compile_options(liblua PRIVATE -Wno-deprecated)
 endif()
 
-target_include_directories(liblua INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(liblua PUBLIC ${CMAKE_CURRENT_BINARY_DIR} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 install(TARGETS liblua RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
-install(FILES lua.h luaconf.h lualib.h lauxlib.h lua.hpp luaex.h DESTINATION include)
+install(FILES lua.h "${CMAKE_CURRENT_BINARY_DIR}/luaconf.h" lualib.h lauxlib.h lua.hpp DESTINATION include)
 
 if(BUILD_EXECUTABLES)
   add_executable(lua lua.c)

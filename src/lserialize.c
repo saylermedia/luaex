@@ -4,21 +4,19 @@
 ** Copyright (C) 2019, Alexey Smirnov <saylermedia@gmail.com>
 */
 
-#ifdef LUAEX_SERIALIZE
 #define serialize_c
 #define LUA_CORE
 
 #include "lprefix.h"
 
-#include <string.h>
-#include <math.h>
-
 #include "lua.h"
 #include "lauxlib.h"
-#include "luaex.h"
 
 #define _(x) x
 
+#ifdef LUAEX_SERIALIZE
+#include <string.h>
+#include <math.h>
 
 static int writer (lua_State *L, const void *b, size_t size, void *B) {
   (void)L;

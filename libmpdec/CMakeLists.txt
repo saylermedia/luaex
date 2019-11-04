@@ -12,10 +12,10 @@ message(STATUS "CPU Capacity: ${CPU_CAPACITY}")
 
 if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mpdecimal${CPU_CAPACITY}vc.h" "${CMAKE_BINARY_DIR}/mpdecimal.h" COPYONLY)
+  configure_file("mpdecimal${CPU_CAPACITY}vc.h" "mpdecimal.h" COPYONLY)
 else()
   set(MPD_HEADER_CONFIG "")
-  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mpdecimal.h.in" "${CMAKE_BINARY_DIR}/mpdecimal.h" @ONLY)
+  configure_file("mpdecimal.h.in" "mpdecimal.h" @ONLY)
 endif()
 
 if(BUILD_SHARED_LIBS AND WIN32)
@@ -33,7 +33,7 @@ else()
   declare_static("mpdec")
 endif()
 
-target_include_directories(mpdec PUBLIC ${CMAKE_BINARY_DIR} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(mpdec PUBLIC ${CMAKE_CURRENT_BINARY_DIR} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 install(TARGETS mpdec RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 #install(FILES mpdecimal.h DESTINATION include)

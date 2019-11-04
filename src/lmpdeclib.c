@@ -4,22 +4,20 @@
 ** Copyright (C) 2019, Alexey Smirnov <saylermedia@gmail.com>
 */
 
-#ifdef LUAEX_MPDECIMAL
 #define mpdeclib_c
 #define LUA_LIB
 
 #include "lprefix.h"
 
-#include <mpdecimal.h>
-
 #include "lua.h"
 
 #include "lauxlib.h"
 #include "lualib.h"
-#include "luaex.h"
-
 
 #define _(x) x
+
+#ifdef LUAEX_MPDECIMAL
+#include <mpdecimal.h>
 
 #define LUA_NUMBERHANDLE "NUMBER*"
 

@@ -17,9 +17,7 @@
 #include <string.h>
 
 #include "lua.h"
-#ifdef LUAEX_CLNTSRV
-#include "luaex.h"
-#endif
+
 
 #include "ldebug.h"
 #include "ldo.h"

@@ -19,10 +19,6 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-#if defined(LUAEX_BASE) | defined(LUAEX_CLNTSRV)
-#include "luaex.h"
-#endif
-
 
 #if !defined(LUA_PROMPT)
 #define LUA_PROMPT		"> "
