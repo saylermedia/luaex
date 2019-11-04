@@ -216,7 +216,7 @@ static const luaL_Reg mtlib[] = {
 
 LUAMOD_API int luaopen_number (lua_State *L) {
   mpd_init(&ctx, 300);
-	ctx.traps = 0;
+  ctx.traps = 0;
   luaL_newlib(L, numberlib);  /* new module */
   luaL_newlib(L, mtlib);
   lua_setmetatable(L, -2);
