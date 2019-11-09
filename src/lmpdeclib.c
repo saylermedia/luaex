@@ -332,8 +332,7 @@ LUAMOD_API int luaopen_number (lua_State *L) {
     mpd_setminalloc(DEC_MINALLOC);
     initialized = 1;
   }*/
-  L->mpd_ctx = dflt_ctx;
-  /*mpd_maxcontext(&L->mpd_ctx);*/
+  mpd_maxcontext(&L->mpd_ctx);
   /* register mpdec library */
   luaL_newlib(L, numberlib);  /* new module */
   luaL_newlib(L, mtlib);
