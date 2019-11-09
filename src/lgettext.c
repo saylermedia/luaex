@@ -44,9 +44,9 @@ LUA_API int lua_lopen (const char *locale) {
   #ifdef _WIN32
     char lbuf[8];
     char cbuf[12];
-		LCID lcid = GetUserDefaultLCID();
-		GetLocaleInfo(lcid, LOCALE_SISO639LANGNAME, lbuf, sizeof(lbuf));
-		GetLocaleInfo(lcid, LOCALE_SISO3166CTRYNAME, cbuf, sizeof(cbuf));
+    LCID lcid = GetUserDefaultLCID();
+    GetLocaleInfo(lcid, LOCALE_SISO639LANGNAME, lbuf, sizeof(lbuf));
+    GetLocaleInfo(lcid, LOCALE_SISO3166CTRYNAME, cbuf, sizeof(cbuf));
     snprintf(buf, sizeof(buf), "../share/i18n/%s_%s.mo", lbuf, cbuf);
     file = fopen(buf, "rb");
     if (file == NULL) {
@@ -91,7 +91,7 @@ LUA_API int lua_lopen (const char *locale) {
 
 
 LUA_API void lua_lclose (void) {
-	if (data) {
+  if (data) {
     free(data);
     data = NULL;
   }
