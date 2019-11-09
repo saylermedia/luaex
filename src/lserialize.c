@@ -171,7 +171,8 @@ static void serialize (lua_State *L, luaL_Buffer *b, int idx, int top) {
           /* serialize result */
           serialize(L, b, -1, top);
           lua_pop(L, 1);
-        }
+        } else
+          lua_pop(L, 1);
         break;
       }
 	  
@@ -208,14 +209,9 @@ LUA_API void lua_serialize (lua_State *L, int idx, int lastidx) {
 }
 
 
-static void check (lua_State *L, int cond, const char *v) {
-  if (!cond) luaL_error(L, _("serialized data malformed, expected '%s'"), v);
-}
+#define check(L,cond,v) if (!(cond)) luaL_error(L, _("serialized data malformed, expected '%s'"))
+#define checkavail(L,cond) if (!(cond)) luaL_error(L, _("serialized data break"))
 
-
-static void checkavail (lua_State *L, int cond) {
-  if (!cond) luaL_error(L, _("serialized data break"));
-}
 
 static const char* nextclose (lua_State *L, const char *s, const char *e) {
   check(L, *s == '{', "{");
