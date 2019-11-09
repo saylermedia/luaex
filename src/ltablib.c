@@ -87,7 +87,7 @@ static int tinsert (lua_State *L) {
     case 3: {
       lua_Integer i;
       pos = luaL_checkinteger(L, 2);  /* 2nd argument is the position */
-      luaL_argcheck(L, 1 <= pos && pos <= e, 2, "position out of bounds");
+      luaL_argcheck(L, 1 <= pos && pos <= e, 2, _("position out of bounds"));
       for (i = e; i > pos; i--) {  /* move up elements */
         lua_geti(L, 1, i - 1);
         lua_seti(L, 1, i);  /* t[i] = t[i - 1] */
@@ -95,7 +95,7 @@ static int tinsert (lua_State *L) {
       break;
     }
     default: {
-      return luaL_error(L, "wrong number of arguments to 'insert'");
+      return luaL_error(L, _("wrong number of arguments to 'insert'"));
     }
   }
   lua_seti(L, 1, pos);  /* t[pos] = v */
@@ -107,7 +107,7 @@ static int tremove (lua_State *L) {
   lua_Integer size = aux_getn(L, 1, TAB_RW);
   lua_Integer pos = luaL_optinteger(L, 2, size);
   if (pos != size)  /* validate 'pos' if given */
-    luaL_argcheck(L, 1 <= pos && pos <= size + 1, 1, "position out of bounds");
+    luaL_argcheck(L, 1 <= pos && pos <= size + 1, 1, _("position out of bounds"));
   lua_geti(L, 1, pos);  /* result = t[pos] */
   for ( ; pos < size; pos++) {
     lua_geti(L, 1, pos + 1);
@@ -135,10 +135,10 @@ static int tmove (lua_State *L) {
   if (e >= f) {  /* otherwise, nothing to move */
     lua_Integer n, i;
     luaL_argcheck(L, f > 0 || e < LUA_MAXINTEGER + f, 3,
-                  "too many elements to move");
+                  _("too many elements to move"));
     n = e - f + 1;  /* number of elements to move */
     luaL_argcheck(L, t <= LUA_MAXINTEGER - n + 1, 4,
-                  "destination wrap around");
+                  _("destination wrap around"));
     if (t > e || t <= f || (tt != 1 && !lua_compare(L, 1, tt, LUA_OPEQ))) {
       for (i = 0; i < n; i++) {
         lua_geti(L, 1, f + i);
@@ -160,7 +160,7 @@ static int tmove (lua_State *L) {
 static void addfield (lua_State *L, luaL_Buffer *b, lua_Integer i) {
   lua_geti(L, 1, i);
   if (!lua_isstring(L, -1))
-    luaL_error(L, "invalid value (%s) at index %d in table for 'concat'",
+    luaL_error(L, _("invalid value (%s) at index %d in table for 'concat'"),
                   luaL_typename(L, -1), i);
   luaL_addvalue(b);
 }
@@ -211,7 +211,7 @@ static int unpack (lua_State *L) {
   if (i > e) return 0;  /* empty range */
   n = (lua_Unsigned)e - i;  /* number of elements minus 1 (avoid overflows) */
   if (n >= (unsigned int)INT_MAX  || !lua_checkstack(L, (int)(++n)))
-    return luaL_error(L, "too many results to unpack");
+    return luaL_error(L, _("too many results to unpack"));
   for (; i < e; i++) {  /* push arg[i..e - 1] (to avoid overflows) */
     lua_geti(L, 1, i);
   }
@@ -315,14 +315,14 @@ static IdxT partition (lua_State *L, IdxT lo, IdxT up) {
     /* next loop: repeat ++i while a[i] < P */
     while (lua_geti(L, 1, ++i), sort_comp(L, -1, -2)) {
       if (i == up - 1)  /* a[i] < P  but a[up - 1] == P  ?? */
-        luaL_error(L, "invalid order function for sorting");
+        luaL_error(L, _("invalid order function for sorting"));
       lua_pop(L, 1);  /* remove a[i] */
     }
     /* after the loop, a[i] >= P and a[lo .. i - 1] < P */
     /* next loop: repeat --j while P < a[j] */
     while (lua_geti(L, 1, --j), sort_comp(L, -3, -1)) {
       if (j < i)  /* j < i  but  a[j] > P ?? */
-        luaL_error(L, "invalid order function for sorting");
+        luaL_error(L, _("invalid order function for sorting"));
       lua_pop(L, 1);  /* remove a[j] */
     }
     /* after the loop, a[j] <= P and a[j + 1 .. up] >= P */
@@ -411,7 +411,7 @@ static void auxsort (lua_State *L, IdxT lo, IdxT up,
 static int sort (lua_State *L) {
   lua_Integer n = aux_getn(L, 1, TAB_RW);
   if (n > 1) {  /* non-trivial interval? */
-    luaL_argcheck(L, n < INT_MAX, 1, "array too big");
+    luaL_argcheck(L, n < INT_MAX, 1, _("array too big"));
     if (!lua_isnoneornil(L, 2))  /* is there a 2nd argument? */
       luaL_checktype(L, 2, LUA_TFUNCTION);  /* must be a function */
     lua_settop(L, 2);  /* make sure there are two arguments */

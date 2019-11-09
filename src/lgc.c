@@ -828,8 +828,8 @@ static void GCTM (lua_State *L, int propagateerrors) {
       if (status == LUA_ERRRUN) {  /* is there an error object? */
         const char *msg = (ttisstring(L->top - 1))
                             ? svalue(L->top - 1)
-                            : "no message";
-        luaO_pushfstring(L, "error in __gc metamethod (%s)", msg);
+                            : _("no message");
+        luaO_pushfstring(L, _("error in __gc metamethod (%s)"), msg);
         status = LUA_ERRGCMM;  /* error in __gc metamethod */
       }
       luaD_throw(L, status);  /* re-throw error */

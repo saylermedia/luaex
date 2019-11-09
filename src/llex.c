@@ -65,7 +65,7 @@ static void save (LexState *ls, int c) {
   if (luaZ_bufflen(b) + 1 > luaZ_sizebuffer(b)) {
     size_t newsize;
     if (luaZ_sizebuffer(b) >= MAX_SIZE/2)
-      lexerror(ls, "lexical element too long", 0);
+      lexerror(ls, _("lexical element too long"), 0);
     newsize = luaZ_sizebuffer(b) * 2;
     luaZ_resizebuffer(ls->L, b, newsize);
   }
@@ -115,7 +115,7 @@ static const char *txtToken (LexState *ls, int token) {
 static l_noret lexerror (LexState *ls, const char *msg, int token) {
   msg = luaG_addinfo(ls->L, msg, ls->source, ls->linenumber);
   if (token)
-    luaO_pushfstring(ls->L, "%s near %s", msg, txtToken(ls, token));
+    luaO_pushfstring(ls->L, _("%s near %s"), msg, txtToken(ls, token));
   luaD_throw(ls->L, LUA_ERRSYNTAX);
 }
 
@@ -161,7 +161,7 @@ static void inclinenumber (LexState *ls) {
   if (currIsNewline(ls) && ls->current != old)
     next(ls);  /* skip '\n\r' or '\r\n' */
   if (++ls->linenumber >= MAX_INT)
-    lexerror(ls, "chunk has too many lines", 0);
+    lexerror(ls, _("chunk has too many lines"), 0);
 }
 
 
@@ -236,7 +236,7 @@ static int read_numeral (LexState *ls, SemInfo *seminfo) {
   }
   save(ls, '\0');
   if (luaO_str2num(luaZ_buffer(ls->buff), &obj) == 0)  /* format error? */
-    lexerror(ls, "malformed number", TK_FLT);
+    lexerror(ls, _("malformed number"), TK_FLT);
   if (ttisinteger(&obj)) {
     seminfo->i = ivalue(&obj);
     return TK_INT;
@@ -275,9 +275,9 @@ static void read_long_string (LexState *ls, SemInfo *seminfo, int sep) {
   for (;;) {
     switch (ls->current) {
       case EOZ: {  /* error */
-        const char *what = (seminfo ? "string" : "comment");
+        const char *what = (seminfo ? _("string") : _("comment"));
         const char *msg = luaO_pushfstring(ls->L,
-                     "unfinished long %s (starting at line %d)", what, line);
+                     _("unfinished long %s (starting at line %d)"), what, line);
         lexerror(ls, msg, TK_EOS);
         break;  /* to avoid warnings */
       }
@@ -317,7 +317,7 @@ static void esccheck (LexState *ls, int c, const char *msg) {
 
 static int gethexa (LexState *ls) {
   save_and_next(ls);
-  esccheck (ls, lisxdigit(ls->current), "hexadecimal digit expected");
+  esccheck (ls, lisxdigit(ls->current), _("hexadecimal digit expected"));
   return luaO_hexavalue(ls->current);
 }
 
@@ -334,14 +334,14 @@ static unsigned long readutf8esc (LexState *ls) {
   unsigned long r;
   int i = 4;  /* chars to be removed: '\', 'u', '{', and first digit */
   save_and_next(ls);  /* skip 'u' */
-  esccheck(ls, ls->current == '{', "missing '{'");
+  esccheck(ls, ls->current == '{', _("missing '{'"));
   r = gethexa(ls);  /* must have at least one digit */
   while ((save_and_next(ls), lisxdigit(ls->current))) {
     i++;
     r = (r << 4) + luaO_hexavalue(ls->current);
-    esccheck(ls, r <= 0x10FFFF, "UTF-8 value too large");
+    esccheck(ls, r <= 0x10FFFF, _("UTF-8 value too large"));
   }
-  esccheck(ls, ls->current == '}', "missing '}'");
+  esccheck(ls, ls->current == '}', _("missing '}'"));
   next(ls);  /* skip '}' */
   luaZ_buffremove(ls->buff, i);  /* remove saved chars from buffer */
   return r;
@@ -363,7 +363,7 @@ static int readdecesc (LexState *ls) {
     r = 10*r + ls->current - '0';
     save_and_next(ls);
   }
-  esccheck(ls, r <= UCHAR_MAX, "decimal escape too large");
+  esccheck(ls, r <= UCHAR_MAX, _("decimal escape too large"));
   luaZ_buffremove(ls->buff, i);  /* remove read digits from buffer */
   return r;
 }
@@ -374,11 +374,11 @@ static void read_string (LexState *ls, int del, SemInfo *seminfo) {
   while (ls->current != del) {
     switch (ls->current) {
       case EOZ:
-        lexerror(ls, "unfinished string", TK_EOS);
+        lexerror(ls, _("unfinished string"), TK_EOS);
         break;  /* to avoid warnings */
       case '\n':
       case '\r':
-        lexerror(ls, "unfinished string", TK_STRING);
+        lexerror(ls, _("unfinished string"), TK_STRING);
         break;  /* to avoid warnings */
       case '\\': {  /* escape sequences */
         int c;  /* final character to be saved */
@@ -408,7 +408,7 @@ static void read_string (LexState *ls, int del, SemInfo *seminfo) {
             goto no_save;
           }
           default: {
-            esccheck(ls, lisdigit(ls->current), "invalid escape sequence");
+            esccheck(ls, lisdigit(ls->current), _("invalid escape sequence"));
             c = readdecesc(ls);  /* digital escape '\ddd' */
             goto only_save;
           }
@@ -470,7 +470,7 @@ static int llex (LexState *ls, SemInfo *seminfo) {
           return TK_STRING;
         }
         else if (sep != -1)  /* '[=...' missing second bracket */
-          lexerror(ls, "invalid long string delimiter", TK_STRING);
+          lexerror(ls, _("invalid long string delimiter"), TK_STRING);
         return '[';
       }
       case '=': {

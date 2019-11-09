@@ -462,6 +462,15 @@ struct lua_Debug {
 ** Copyright (C) 2019, Alexey Smirnov <saylermedia@gmail.com>
 */
 
+#ifdef LUAEX_I18N
+LUA_API int (lua_lopen) (const char *locale);
+LUA_API void (lua_lclose) (void);
+LUA_API const char * (lua_gettext) (const char *s);
+#define _(x) lua_gettext(x)
+#else
+#define _(x) x
+#endif
+
 /* running on side: server, client or both */
 #ifdef LUAEX_CLNTSRV
 #define LUAEX_SBOTH 0

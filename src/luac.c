@@ -44,18 +44,18 @@ static void fatal(const char* message)
 
 static void cannot(const char* what)
 {
- fprintf(stderr,"%s: cannot %s %s: %s\n",progname,what,output,strerror(errno));
+ fprintf(stderr,_("%s: cannot %s %s: %s\n"),progname,what,output,strerror(errno));
  exit(EXIT_FAILURE);
 }
 
 static void usage(const char* message)
 {
  if (*message=='-')
-  fprintf(stderr,"%s: unrecognized option '%s'\n",progname,message);
+  fprintf(stderr,_("%s: unrecognized option '%s'\n"),progname,message);
  else
   fprintf(stderr,"%s: %s\n",progname,message);
  fprintf(stderr,
-  "usage: %s [options] [filenames]\n"
+  _("usage: %s [options] [filenames]\n"
   "Available options are:\n"
   "  -l       list (use -l -l for full listing)\n"
   "  -o name  output to file 'name' (default is \"%s\")\n"
@@ -63,7 +63,7 @@ static void usage(const char* message)
   "  -s       strip debug information\n"
   "  -v       show version information\n"
   "  --       stop handling options\n"
-  "  -        stop handling options and process stdin\n"
+  "  -        stop handling options and process stdin\n")
   ,progname,Output);
  exit(EXIT_FAILURE);
 }
@@ -93,7 +93,7 @@ static int doargs(int argc, char* argv[])
   {
    output=argv[++i];
    if (output==NULL || *output==0 || (*output=='-' && output[1]!=0))
-    usage("'-o' needs argument");
+    usage(_("'-o' needs argument"));
    if (IS("-")) output=NULL;
   }
   else if (IS("-p"))			/* parse only */
@@ -169,7 +169,7 @@ static int pmain(lua_State* L)
  char** argv=(char**)lua_touserdata(L,2);
  const Proto* f;
  int i;
- if (!lua_checkstack(L,argc)) fatal("too many input files");
+ if (!lua_checkstack(L,argc)) fatal(_("too many input files"));
  for (i=0; i<argc; i++)
  {
   const char* filename=IS("-") ? NULL : argv[i];
@@ -190,14 +190,28 @@ static int pmain(lua_State* L)
  return 0;
 }
 
+#ifdef LUAEX_BASE
+#ifdef _WIN32
+#include <windows.h>
+#endif
+#endif
+
 int main(int argc, char* argv[])
 {
+#ifdef LUAEX_BASE
+#ifdef _WIN32
+  SetConsoleOutputCP(CP_UTF8);
+#endif
+#endif
+#ifdef LUAEX_I18N
+  lua_lopen(NULL);
+#endif
  lua_State* L;
  int i=doargs(argc,argv);
  argc-=i; argv+=i;
- if (argc<=0) usage("no input files given");
+ if (argc<=0) usage(_("no input files given"));
  L=luaL_newstate();
- if (L==NULL) fatal("cannot create state: not enough memory");
+ if (L==NULL) fatal(_("cannot create state: not enough memory"));
  lua_pushcfunction(L,&pmain);
  lua_pushinteger(L,argc);
  lua_pushlightuserdata(L,argv);
@@ -233,6 +247,9 @@ int main(int argc, char* argv[])
 #define getCMode(m)	(cast(enum OpArgMask, (luaP_opmode(m) >> 2) & 3))
 #define testAMode(m)	(luaP_opmode(m) & (1 << 6))
 #define testTMode(m)	(luaP_opmode(m) & (1 << 7))
+#ifdef VOID
+#undef VOID
+#endif
 #endif
 
 

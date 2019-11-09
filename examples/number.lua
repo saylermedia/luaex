@@ -24,3 +24,4 @@ for i = 1, 10 do
   local v = math.random() * 5
   print(v, v:floor(), v:ceil())
 end
+

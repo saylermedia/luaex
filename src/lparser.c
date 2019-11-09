@@ -72,7 +72,7 @@ static l_noret semerror (LexState *ls, const char *msg) {
 
 static l_noret error_expected (LexState *ls, int token) {
   luaX_syntaxerror(ls,
-      luaO_pushfstring(ls->L, "%s expected", luaX_token2str(ls, token)));
+      luaO_pushfstring(ls->L, _("%s expected"), luaX_token2str(ls, token)));
 }
 
 
@@ -81,9 +81,9 @@ static l_noret errorlimit (FuncState *fs, int limit, const char *what) {
   const char *msg;
   int line = fs->f->linedefined;
   const char *where = (line == 0)
-                      ? "main function"
-                      : luaO_pushfstring(L, "function at line %d", line);
-  msg = luaO_pushfstring(L, "too many %s (limit is %d) in %s",
+                      ? _("main function")
+                      : luaO_pushfstring(L, _("function at line %d"), line);
+  msg = luaO_pushfstring(L, _("too many %s (limit is %d) in %s"),
                              what, limit, where);
   luaX_syntaxerror(fs->ls, msg);
 }
@@ -125,7 +125,7 @@ static void check_match (LexState *ls, int what, int who, int where) {
       error_expected(ls, what);
     else {
       luaX_syntaxerror(ls, luaO_pushfstring(ls->L,
-             "%s expected (to close %s at line %d)",
+             _("%s expected (to close %s at line %d)"),
               luaX_token2str(ls, what), luaX_token2str(ls, who), where));
     }
   }
@@ -347,7 +347,7 @@ static void closegoto (LexState *ls, int g, Labeldesc *label) {
   if (gt->nactvar < label->nactvar) {
     TString *vname = getlocvar(fs, gt->nactvar)->varname;
     const char *msg = luaO_pushfstring(ls->L,
-      "<goto %s> at line %d jumps into the scope of local '%s'",
+      _("<goto %s> at line %d jumps into the scope of local '%s'"),
       getstr(gt->name), gt->line, getstr(vname));
     semerror(ls, msg);
   }
@@ -463,8 +463,8 @@ static void breaklabel (LexState *ls) {
 */
 static l_noret undefgoto (LexState *ls, Labeldesc *gt) {
   const char *msg = isreserved(gt->name)
-                    ? "<%s> at line %d not inside a loop"
-                    : "no visible label '%s' for <goto> at line %d";
+                    ? _("<%s> at line %d not inside a loop")
+                    : _("no visible label '%s' for <goto> at line %d");
   msg = luaO_pushfstring(ls->L, msg, getstr(gt->name), gt->line);
   semerror(ls, msg);
 }
@@ -772,7 +772,7 @@ static void parlist (LexState *ls) {
           f->is_vararg = 1;  /* declared vararg */
           break;
         }
-        default: luaX_syntaxerror(ls, "<name> or '...' expected");
+        default: luaX_syntaxerror(ls, _("<name> or '...' expected"));
       }
     } while (!f->is_vararg && testnext(ls, ','));
   }
@@ -843,7 +843,7 @@ static void funcargs (LexState *ls, expdesc *f, int line) {
       break;
     }
     default: {
-      luaX_syntaxerror(ls, "function arguments expected");
+      luaX_syntaxerror(ls, _("function arguments expected"));
     }
   }
   lua_assert(f->k == VNONRELOC);
@@ -887,7 +887,7 @@ static void primaryexp (LexState *ls, expdesc *v) {
       return;
     }
     default: {
-      luaX_syntaxerror(ls, "unexpected symbol");
+      luaX_syntaxerror(ls, _("unexpected symbol"));
     }
   }
 }
@@ -964,7 +964,7 @@ static void simpleexp (LexState *ls, expdesc *v) {
     case TK_DOTS: {  /* vararg */
       FuncState *fs = ls->fs;
       check_condition(ls, fs->f->is_vararg,
-                      "cannot use '...' outside a vararg function");
+                      _("cannot use '...' outside a vararg function"));
       init_exp(v, VVARARG, luaK_codeABC(fs, OP_VARARG, 0, 1, 0));
       break;
     }
@@ -1149,7 +1149,7 @@ static void check_conflict (LexState *ls, struct LHS_assign *lh, expdesc *v) {
 
 static void assignment (LexState *ls, struct LHS_assign *lh, int nvars) {
   expdesc e;
-  check_condition(ls, vkisvar(lh->v.k), "syntax error");
+  check_condition(ls, vkisvar(lh->v.k), _("syntax error"));
   if (testnext(ls, ',')) {  /* assignment -> ',' suffixedexp assignment */
     struct LHS_assign nv;
     nv.prev = lh;
@@ -1208,7 +1208,7 @@ static void checkrepeated (FuncState *fs, Labellist *ll, TString *label) {
   for (i = fs->bl->firstlabel; i < ll->n; i++) {
     if (eqstr(label, ll->arr[i].name)) {
       const char *msg = luaO_pushfstring(fs->ls->L,
-                          "label '%s' already defined on line %d",
+                          _("label '%s' already defined on line %d"),
                           getstr(label), ll->arr[i].line);
       semerror(fs->ls, msg);
     }
@@ -1375,7 +1375,7 @@ static void forstat (LexState *ls, int line) {
   switch (ls->t.token) {
     case '=': fornum(ls, varname, line); break;
     case ',': case TK_IN: forlist(ls, varname); break;
-    default: luaX_syntaxerror(ls, "'=' or 'in' expected");
+    default: luaX_syntaxerror(ls, _("'=' or 'in' expected"));
   }
   check_match(ls, TK_END, TK_FOR, line);
   leaveblock(fs);  /* loop scope ('break' jumps to this point) */
@@ -1498,7 +1498,7 @@ static void exprstat (LexState *ls) {
     assignment(ls, &v, 1);
   }
   else {  /* stat -> func */
-    check_condition(ls, v.v.k == VCALL, "syntax error");
+    check_condition(ls, v.v.k == VCALL, _("syntax error"));
     SETARG_C(getinstruction(fs, &v.v), 1);  /* call statement uses no results */
   }
 }
@@ -1655,7 +1655,7 @@ static void statement (LexState *ls) {
           /* function */
           singlevar(ls, &v);
           if (ls->t.token == ':')
-            luaX_syntaxerror(ls, "expected function, got method");
+            luaX_syntaxerror(ls, _("expected function, got method"));
           else if (ls->t.token == '.')
             fieldsel(ls, &v);
           body(ls, &b, 0, line);
@@ -1663,7 +1663,7 @@ static void statement (LexState *ls) {
           luaK_fixline(ls->fs, line);  /* definition "happens" in the first line */
         }
         else
-          luaX_syntaxerror(ls, "expected function");
+          luaX_syntaxerror(ls, _("expected function"));
       break;
     }
   #endif

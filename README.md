@@ -25,3 +25,4 @@ int main() {
 * Added math table as metatable for number values, see [number.lua](https://github.com/saylermedia/luaex/blob/master/examples/number.lua)
 * Added serialize and deserialize functions, see [serialize.lua](https://github.com/saylermedia/luaex/blob/master/examples/serialize.lua)
 * Added native threads library, see [thread.lua](https://github.com/saylermedia/luaex/blob/master/examples/thread.lua)
+* Added bignumber library, see [thread.lua](https://github.com/saylermedia/luaex/blob/master/examples/bignumber.lua)

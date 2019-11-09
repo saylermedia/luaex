@@ -110,7 +110,7 @@ static const char *progname = LUA_PROGNAME;
 static void lstop (lua_State *L, lua_Debug *ar) {
   (void)ar;  /* unused arg. */
   lua_sethook(L, NULL, 0, 0);  /* reset hook */
-  luaL_error(L, "interrupted!");
+  luaL_error(L, _("interrupted!"));
 }
 
 
@@ -129,11 +129,11 @@ static void laction (int i) {
 static void print_usage (const char *badoption) {
   lua_writestringerror("%s: ", progname);
   if (badoption[1] == 'e' || badoption[1] == 'l')
-    lua_writestringerror("'%s' needs argument\n", badoption);
+    lua_writestringerror(_("'%s' needs argument\n"), badoption);
   else
-    lua_writestringerror("unrecognized option '%s'\n", badoption);
+    lua_writestringerror(_("unrecognized option '%s'\n"), badoption);
   lua_writestringerror(
-  "usage: %s [options] [script [args]]\n"
+  _("usage: %s [options] [script [args]]\n"
   "Available options are:\n"
   "  -e stat  execute string 'stat'\n"
   "  -i       enter interactive mode after executing 'script'\n"
@@ -141,7 +141,7 @@ static void print_usage (const char *badoption) {
   "  -v       show version information\n"
   "  -E       ignore environment variables\n"
   "  --       stop handling options\n"
-  "  -        stop handling options and execute stdin\n"
+  "  -        stop handling options and execute stdin\n")
   ,
   progname);
 }
@@ -387,11 +387,11 @@ static int loadline (lua_State *L) {
 static void l_print (lua_State *L) {
   int n = lua_gettop(L);
   if (n > 0) {  /* any result to be printed? */
-    luaL_checkstack(L, LUA_MINSTACK, "too many results to print");
+    luaL_checkstack(L, LUA_MINSTACK, _("too many results to print"));
     lua_getglobal(L, "print");
     lua_insert(L, 1);
     if (lua_pcall(L, n, 0, 0) != LUA_OK)
-      l_message(progname, lua_pushfstring(L, "error calling 'print' (%s)",
+      l_message(progname, lua_pushfstring(L, _("error calling 'print' (%s)"),
                                              lua_tostring(L, -1)));
   }
 }
@@ -423,9 +423,9 @@ static void doREPL (lua_State *L) {
 static int pushargs (lua_State *L) {
   int i, n;
   if (lua_getglobal(L, "arg") != LUA_TTABLE)
-    luaL_error(L, "'arg' is not a table");
+    luaL_error(L, _("'arg' is not a table"));
   n = (int)luaL_len(L, -1);
-  luaL_checkstack(L, n + 3, "too many arguments to script");
+  luaL_checkstack(L, n + 3, _("too many arguments to script"));
   for (i = 1; i <= n; i++)
     lua_rawgeti(L, -i, i);
   lua_remove(L, -i);  /* remove table from the stack */
@@ -616,10 +616,13 @@ int main (int argc, char **argv) {
   SetConsoleOutputCP(CP_UTF8);
 #endif
 #endif
+#ifdef LUAEX_I18N
+  lua_lopen(NULL);
+#endif
   int status, result;
   lua_State *L = luaL_newstate();  /* create state */
   if (L == NULL) {
-    l_message(argv[0], "cannot create state: not enough memory");
+    l_message(argv[0], _("cannot create state: not enough memory"));
     return EXIT_FAILURE;
   }
 #ifdef LUAEX_CLNTSRV

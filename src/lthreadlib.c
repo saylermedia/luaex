@@ -14,7 +14,6 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-#define _(x) x
 
 #ifdef LUAEX_THREADLIB
 #include <math.h>
@@ -436,7 +435,7 @@ static int pindex (lua_State *L) {
   PoolState *ps = (PoolState *) luaL_checkudata(L, 1, LUA_POOLHANDLE);
   if (lua_type(L, 2) == LUA_TNUMBER) {
     size_t idx = (size_t) luaL_checkinteger(L, 2);
-    luaL_argcheck(L, idx > 0 && idx <= ps->refsize, 1, "index out of range");
+    luaL_argcheck(L, idx > 0 && idx <= ps->refsize, 1, _("index out of range"));
     lua_rawgeti(L, LUA_REGISTRYINDEX, ps->ref[idx - 1]);
   } else {
     luaL_getmetatable(L, LUA_POOLHANDLE);

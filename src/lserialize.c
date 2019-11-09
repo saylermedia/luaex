@@ -12,7 +12,6 @@
 #include "lua.h"
 #include "lauxlib.h"
 
-#define _(x) x
 
 #ifdef LUAEX_SERIALIZE
 #include <string.h>

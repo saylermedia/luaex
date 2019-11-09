@@ -176,7 +176,7 @@ static unsigned int findindex (lua_State *L, Table *t, StkId key) {
       }
       nx = gnext(n);
       if (nx == 0)
-        luaG_runerror(L, "invalid key to 'next'");  /* key not found */
+        luaG_runerror(L, _("invalid key to 'next'"));  /* key not found */
       else n += nx;
     }
   }
@@ -317,7 +317,7 @@ static void setnodevector (lua_State *L, Table *t, unsigned int size) {
     int i;
     int lsize = luaO_ceillog2(size);
     if (lsize > MAXHBITS)
-      luaG_runerror(L, "table overflow");
+      luaG_runerror(L, _("table overflow"));
     size = twoto(lsize);
     t->node = luaM_newvector(L, size, Node);
     for (i = 0; i < (int)size; i++) {
@@ -461,7 +461,7 @@ static Node *getfreepos (Table *t) {
 TValue *luaH_newkey (lua_State *L, Table *t, const TValue *key) {
   Node *mp;
   TValue aux;
-  if (ttisnil(key)) luaG_runerror(L, "table index is nil");
+  if (ttisnil(key)) luaG_runerror(L, _("table index is nil"));
   else if (ttisfloat(key)) {
     lua_Integer k;
     if (luaV_tointeger(key, &k, 0)) {  /* does index fit in an integer? */
@@ -469,7 +469,7 @@ TValue *luaH_newkey (lua_State *L, Table *t, const TValue *key) {
       key = &aux;  /* insert it as an integer */
     }
     else if (luai_numisnan(fltvalue(key)))
-      luaG_runerror(L, "table index is NaN");
+      luaG_runerror(L, _("table index is NaN"));
   }
   mp = mainposition(t, key);
   if (!ttisnil(gval(mp)) || isdummy(t)) {  /* main position is taken? */

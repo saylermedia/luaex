@@ -128,7 +128,7 @@ static int math_fmod (lua_State *L) {
   if (lua_isinteger(L, 1) && lua_isinteger(L, 2)) {
     lua_Integer d = lua_tointeger(L, 2);
     if ((lua_Unsigned)d + 1u <= 1u) {  /* special cases: -1 or 0 */
-      luaL_argcheck(L, d != 0, 2, "zero");
+      luaL_argcheck(L, d != 0, 2, _("zero"));
       lua_pushinteger(L, 0);  /* avoid overflow with 0x80000... / -1 */
     }
     else
@@ -216,7 +216,7 @@ static int math_min (lua_State *L) {
   int n = lua_gettop(L);  /* number of arguments */
   int imin = 1;  /* index of current minimum value */
   int i;
-  luaL_argcheck(L, n >= 1, 1, "value expected");
+  luaL_argcheck(L, n >= 1, 1, _("value expected"));
   for (i = 2; i <= n; i++) {
     if (lua_compare(L, i, imin, LUA_OPLT))
       imin = i;
@@ -230,7 +230,7 @@ static int math_max (lua_State *L) {
   int n = lua_gettop(L);  /* number of arguments */
   int imax = 1;  /* index of current maximum value */
   int i;
-  luaL_argcheck(L, n >= 1, 1, "value expected");
+  luaL_argcheck(L, n >= 1, 1, _("value expected"));
   for (i = 2; i <= n; i++) {
     if (lua_compare(L, imax, i, LUA_OPLT))
       imax = i;
@@ -262,12 +262,12 @@ static int math_random (lua_State *L) {
       up = luaL_checkinteger(L, 2);
       break;
     }
-    default: return luaL_error(L, "wrong number of arguments");
+    default: return luaL_error(L, _("wrong number of arguments"));
   }
   /* random integer in the interval [low, up] */
-  luaL_argcheck(L, low <= up, 1, "interval is empty");
+  luaL_argcheck(L, low <= up, 1, _("interval is empty"));
   luaL_argcheck(L, low >= 0 || up <= LUA_MAXINTEGER + low, 1,
-                   "interval too large");
+                   _("interval too large"));
   r *= (double)(up - low) + 1.0;
   lua_pushinteger(L, (lua_Integer)r + low);
   return 1;

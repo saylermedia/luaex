@@ -316,7 +316,7 @@ LUA_API int lua_getinfo (lua_State *L, const char *what, lua_Debug *ar) {
   if (*what == '>') {
     ci = NULL;
     func = L->top - 1;
-    api_check(L, ttisfunction(func), "function expected");
+    api_check(L, ttisfunction(func), _("function expected"));
     what++;  /* skip the '>' */
     L->top--;  /* pop function */
   }
@@ -584,13 +584,13 @@ static const char *varinfo (lua_State *L, const TValue *o) {
 
 l_noret luaG_typeerror (lua_State *L, const TValue *o, const char *op) {
   const char *t = luaT_objtypename(L, o);
-  luaG_runerror(L, "attempt to %s a %s value%s", op, t, varinfo(L, o));
+  luaG_runerror(L, _("attempt to %s a %s value%s"), op, t, varinfo(L, o));
 }
 
 
 l_noret luaG_concaterror (lua_State *L, const TValue *p1, const TValue *p2) {
   if (ttisstring(p1) || cvt2str(p1)) p1 = p2;
-  luaG_typeerror(L, p1, "concatenate");
+  luaG_typeerror(L, p1, _("concatenate"));
 }
 
 
@@ -610,7 +610,7 @@ l_noret luaG_tointerror (lua_State *L, const TValue *p1, const TValue *p2) {
   lua_Integer temp;
   if (!tointeger(p1, &temp))
     p2 = p1;
-  luaG_runerror(L, "number%s has no integer representation", varinfo(L, p2));
+  luaG_runerror(L, _("number%s has no integer representation"), varinfo(L, p2));
 }
 
 
@@ -618,9 +618,9 @@ l_noret luaG_ordererror (lua_State *L, const TValue *p1, const TValue *p2) {
   const char *t1 = luaT_objtypename(L, p1);
   const char *t2 = luaT_objtypename(L, p2);
   if (strcmp(t1, t2) == 0)
-    luaG_runerror(L, "attempt to compare two %s values", t1);
+    luaG_runerror(L, _("attempt to compare two %s values"), t1);
   else
-    luaG_runerror(L, "attempt to compare %s with %s", t1, t2);
+    luaG_runerror(L, _("attempt to compare %s with %s"), t1, t2);
 }
 
 

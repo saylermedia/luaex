@@ -7,6 +7,15 @@
 #ifndef lstate_h
 #define lstate_h
 
+#ifdef LUAEX_MPDECIMAL
+#ifdef UNUSED
+#undef UNUSED
+#endif
+#include <mpdecimal.h>
+#undef UNUSED
+#define UNUSED(x) (void)x
+#endif
+
 #include "lua.h"
 
 #include "lobject.h"
@@ -200,12 +209,15 @@ struct lua_State {
   l_signalT hookmask;
   lu_byte allowhook;
 #ifdef LUAEX_CLNTSRV
-  volatile int side; /* running on side */
+  int side; /* running on side */
   volatile lua_CFunction sscall; /* hook function server call */
   volatile lua_CFunction sccall; /* hook function client call */
 #endif
 #ifdef LUAEX_THREADLIB
   volatile int canceled; /* cancel execution (native thread destructor) */
+#endif
+#ifdef LUAEX_MPDECIMAL
+  mpd_context_t mpd_ctx; /* mpdecimal context */
 #endif
 };
 

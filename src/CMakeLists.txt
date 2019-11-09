@@ -7,14 +7,10 @@ set(SOURCES lapi.c lcode.c lctype.c ldebug.c ldo.c ldump.c lfunc.c lgc.c
   llex.c lmem.c lobject.c lopcodes.c lparser.c lstate.c lstring.c ltable.c ltm.c
   lundump.c lvm.c lzio.c lauxlib.c lbaselib.c lbitlib.c lcorolib.c ldblib.c liolib.c
   lmathlib.c loslib.c lstrlib.c ltablib.c lutf8lib.c loadlib.c linit.c
-  lserialize.c lthreadlib.c lmpdeclib.c)
+  lserialize.c lthreadlib.c lmpdeclib.c lgettext.c)
 
 set_source_files_properties(${SOURCES} lua.c luac.c PROPERTIES C_STANDARD 99)
 configure_file("luaconf.h.in" "luaconf.h")
-
-if(MSVC)
-  add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS)
-endif()
 
 set(LUA_LIBS "")
 

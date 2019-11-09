@@ -1,0 +1,1115 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2019-11-09 05:50+0300\n"
+"PO-Revision-Date: 2019-11-09 06:30+0300\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: ru_RU\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.2.3\n"
+"X-Poedit-Basepath: ../src\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: _\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: lapi.c:54 lapi.c:69
+msgid "invalid index"
+msgstr "недопустимый индекс"
+
+#: lapi.c:57
+msgid "index not in the stack"
+msgstr "индекс не стеке"
+
+#: lapi.c:64
+msgid "unacceptable index"
+msgstr "недопустимый индекс"
+
+#: lapi.c:76 lapi.c:541
+msgid "upvalue index too large"
+msgstr "upvalue индекс слишком большой"
+
+#: lapi.c:101
+msgid "negative 'n'"
+msgstr "отрицательный 'n'"
+
+#: lapi.c:123
+msgid "moving among independent states"
+msgstr "перемещение между независимыми состояниями"
+
+#: lapi.c:124 lapi.h:15 lauxlib.c:389 ldblib.c:37 ldo.c:202
+msgid "stack overflow"
+msgstr "переполнение стека"
+
+#: lapi.c:176
+msgid "new top too large"
+msgstr "новая вершина слишком большая"
+
+#: lapi.c:182
+msgid "invalid new top"
+msgstr "недопустимая новая вершина"
+
+#: lapi.c:259
+msgid "invalid tag"
+msgstr "неверный тег"
+
+#: lapi.c:329 ldblib.c:163
+msgid "invalid option"
+msgstr "недопустимая опция"
+
+#: lapi.c:651 lapi.c:662 lapi.c:675 lapi.c:807 lapi.c:822 lapi.c:836 lapi.c:855
+#: lapi.c:1128
+msgid "table expected"
+msgstr "ожидается таблица"
+
+#: lapi.c:728 lapi.c:891
+msgid "full userdata expected"
+msgstr "ожидается полная userdata"
+
+#: lapi.c:914 lapi.c:955
+msgid "cannot use continuations inside hooks"
+msgstr "невозможно использовать продолжения внутри хуков"
+
+#: lapi.c:916 lapi.c:957
+msgid "cannot do calls on non-normal thread"
+msgstr "невозможно делать вызовы в ненормальном потоке"
+
+#: lapi.c:1260 ldblib.c:294 ldblib.c:295
+msgid "Lua function expected"
+msgstr "ожидается функция Lua"
+
+#: lapi.c:1262 lapi.c:1276 ldblib.c:279
+msgid "invalid upvalue index"
+msgstr "недопустимый индекс upvalue"
+
+#: lapi.c:1280
+msgid "closure expected"
+msgstr "ожидается замыкание"
+
+#: lapi.h:21
+msgid "not enough elements in the stack"
+msgstr "недостаточно элементов в стеке"
+
+#: lauxlib.c:96
+#, c-format
+msgid "function '%s'"
+msgstr "функция '%s'"
+
+#: lauxlib.c:103
+msgid "main chunk"
+msgstr "главном блоке"
+
+#: lauxlib.c:108
+#, c-format
+msgid "function <%s:%d>"
+msgstr "функция <%s:%d>"
+
+#: lauxlib.c:139
+msgid "stack traceback:"
+msgstr "стек вызовов:"
+
+#: lauxlib.c:154
+msgid " in "
+msgstr " в "
+
+#: lauxlib.c:161
+msgid ""
+"\n"
+"\t(...tail calls...)"
+msgstr ""
+"\n"
+"\t(...последние вызовы...)"
+
+#: lauxlib.c:183
+#, c-format
+msgid "bad argument #%d (%s)"
+msgstr "плохой аргумент #%d (%s)"
+
+#: lauxlib.c:188
+#, c-format
+msgid "calling '%s' on bad self (%s)"
+msgstr "вызов '%s' на плохом объекте (%s)"
+
+#: lauxlib.c:193
+#, c-format
+msgid "bad argument #%d to '%s' (%s)"
+msgstr "плохой аргумент #%d для '%s' (%s)"
+
+#: lauxlib.c:207
+#, c-format
+msgid "%s expected, got %s"
+msgstr "ожидается %s, а не %s"
+
+#: lauxlib.c:373
+#, c-format
+msgid "invalid option '%s'"
+msgstr "недопустимая опция '%s'"
+
+#: lauxlib.c:387
+#, c-format
+msgid "stack overflow (%s)"
+msgstr "переполнение стека (%s)"
+
+#: lauxlib.c:402 lbaselib.c:203 lmathlib.c:219 lmathlib.c:233
+msgid "value expected"
+msgstr "ожидается значение"
+
+#: lauxlib.c:440
+msgid "number has no integer representation"
+msgstr "число не имеет никакого целочисленного представления"
+
+#: lauxlib.c:484
+msgid "not enough memory for buffer allocation"
+msgstr "недостаточно памяти для буфера"
+
+#: lauxlib.c:529
+msgid "buffer too large"
+msgstr "слишком большой буфер"
+
+#: lauxlib.c:679
+#, c-format
+msgid "cannot %s %s: %s"
+msgstr "невозможно %s %s: %s"
+
+#: lauxlib.c:820
+msgid "object length is not an integer"
+msgstr "объектная длина не является целым числом"
+
+#: lauxlib.c:829
+msgid "'__tostring' must return a string"
+msgstr "'__tostring' должна возвратить строку"
+
+#: lauxlib.c:921
+#, c-format
+msgid "name conflict for module '%s'"
+msgstr "конфликт имен для модуля '%s'"
+
+#: lauxlib.c:951
+msgid "too many upvalues"
+msgstr "слишком много параметров верхнего уровня"
+
+#: lauxlib.c:1036
+#, c-format
+msgid "PANIC: unprotected error in call to Lua API (%s)\n"
+msgstr "PANIC: незащищенная ошибка при вызове Lua API (%s)\n"
+
+#: lauxlib.c:1052
+msgid "core and library have incompatible numeric types"
+msgstr "ядро и библиотека имеют несовместимые числовые типы"
+
+#: lauxlib.c:1054
+msgid "multiple Lua VMs detected"
+msgstr "обнаружено множественное использование виртуальных машин Lua"
+
+#: lauxlib.c:1056
+#, c-format
+msgid "version mismatch: app. needs %f, Lua core provides %f"
+msgstr "несоответствие версии: прил. требуется %f, Lua ядро обеспечивает %f"
+
+#: lbaselib.c:36
+msgid "'tostring' must return a string to 'print'"
+msgstr "'tostring' должна возвратить строку для 'print'"
+
+#: lbaselib.c:91
+msgid "base out of range"
+msgstr "вне диапазона"
+
+#: lbaselib.c:129 ldblib.c:59
+msgid "nil or table expected"
+msgstr "ожидается неопределено или таблица"
+
+#: lbaselib.c:131
+msgid "cannot change a protected metatable"
+msgstr "не может изменить защищенную таблицу метаданных"
+
+#: lbaselib.c:149
+msgid "table or string expected"
+msgstr "ожидается строка или таблица"
+
+#: lbaselib.c:319
+msgid "too many nested functions"
+msgstr "слишком много вложенных функций"
+
+#: lbaselib.c:328
+msgid "reader function must return a string"
+msgstr "функция чтения должна возвратить строку"
+
+#: lbaselib.c:379
+msgid "assertion failed!"
+msgstr "условное исключение!"
+
+#: lbaselib.c:399 lthreadlib.c:438
+msgid "index out of range"
+msgstr "индекс вне диапазона"
+
+#: lbitlib.c:171
+msgid "field cannot be negative"
+msgstr "поле не может быть отрицательным"
+
+#: lbitlib.c:172
+msgid "width must be positive"
+msgstr "ширина должна быть положительной"
+
+#: lbitlib.c:174
+msgid "trying to access non-existent bits"
+msgstr "попытка получить доступ к несуществующим битам"
+
+#: lbitlib.c:230
+msgid "library 'bit32' has been deprecated"
+msgstr "библиотека 'bit32' устарела"
+
+#: lcode.c:108
+msgid "control structure too long"
+msgstr "управляющая структура слишком длинная"
+
+#: lcode.c:366
+msgid "function or expression needs too many registers"
+msgstr "функция или выражение нуждаются в слишком многих регистрах"
+
+#: lcode.c:1200
+msgid "constructor too long"
+msgstr "конструктор слишком длинный"
+
+#: lcorolib.c:23
+msgid "thread expected"
+msgstr "ожидается поток"
+
+#: lcorolib.c:32
+msgid "too many arguments to resume"
+msgstr "слишком много параметров для возобновления"
+
+#: lcorolib.c:49
+msgid "too many results to resume"
+msgstr "слишком много результатов для продолжения"
+
+#: ldblib.c:207 ldblib.c:232
+msgid "level out of range"
+msgstr "уровень вне диапазона"
+
+#: ldebug.c:319
+msgid "function expected"
+msgstr "ожидается функция"
+
+#: ldebug.c:587
+#, c-format
+msgid "attempt to %s a %s value%s"
+msgstr "попытка %s a %s значения %s"
+
+#: ldebug.c:593
+msgid "concatenate"
+msgstr "конкатенировать"
+
+#: ldebug.c:613
+#, c-format
+msgid "number%s has no integer representation"
+msgstr "число%s не имеет никакого целочисленного представления"
+
+#: ldebug.c:621
+#, c-format
+msgid "attempt to compare two %s values"
+msgstr "попытка сравнить два значения %s"
+
+#: ldebug.c:623
+#, c-format
+msgid "attempt to compare %s with %s"
+msgstr "попытка сравнить %s с %s"
+
+#: ldo.c:483
+msgid "C stack overflow"
+msgstr "переполнение стека C"
+
+#: ldo.c:700
+msgid "attempt to yield across a C-call boundary"
+msgstr "попытка уступить через границу C-вызова"
+
+#: ldo.c:702
+msgid "attempt to yield from outside a coroutine"
+msgstr "попытка уступить снаружи сопрограммы"
+
+#: ldo.c:707
+msgid "hooks cannot continue after yielding"
+msgstr "хуки не могут продолжаться после остановки"
+
+#: ldo.c:760
+#, c-format
+msgid "attempt to load a %s chunk (mode is '%s')"
+msgstr "попытка загрузить блок %s (в режиме '%s')"
+
+#: lgc.c:831
+msgid "no message"
+msgstr "отсутствует сообщение"
+
+#: lgc.c:832
+#, c-format
+msgid "error in __gc metamethod (%s)"
+msgstr "ошибка в __gc метаметода (%s)"
+
+#: liolib.c:72
+msgid "'popen' not supported"
+msgstr "'popen' не поддерживается"
+
+#: liolib.c:168
+msgid "file (closed)"
+msgstr "файл (закрыт)"
+
+#: liolib.c:173
+#, c-format
+msgid "file (%p)"
+msgstr "файл (%p)"
+
+#: liolib.c:181
+msgid "attempt to use a closed file"
+msgstr "попытка использовать закрытый файл"
+
+#: liolib.c:256
+#, c-format
+msgid "cannot open file '%s' (%s)"
+msgstr "невозможно открыть файл '%s' (%s)"
+
+#: liolib.c:265
+msgid "invalid mode"
+msgstr "недопустимый режим"
+
+#: liolib.c:302
+#, c-format
+msgid "standard %s file is closed"
+msgstr "стандартный файл %s закрыт"
+
+#: liolib.c:345 liolib.c:543 liolib.c:600
+msgid "too many arguments"
+msgstr "слишком много параметров"
+
+#: liolib.c:598
+msgid "file is already closed"
+msgstr "файл уже закрыт"
+
+#: liolib.c:668
+msgid "not an integer in proper range"
+msgstr "не целое число в правильном диапазоне"
+
+#: liolib.c:754
+msgid "cannot close standard file"
+msgstr "невозможно закрыть стандартный файл"
+
+#: llex.c:68
+msgid "lexical element too long"
+msgstr "лексический элемент слишком долгий"
+
+#: llex.c:118
+#, c-format
+msgid "%s near %s"
+msgstr "%s около %s"
+
+#: llex.c:164
+msgid "chunk has too many lines"
+msgstr "блок имеет слишком много строк"
+
+#: llex.c:239
+msgid "malformed number"
+msgstr "некорректное число"
+
+#: llex.c:278
+msgid "string"
+msgstr "строка"
+
+#: llex.c:278
+msgid "comment"
+msgstr "комментарий"
+
+#: llex.c:280
+#, c-format
+msgid "unfinished long %s (starting at line %d)"
+msgstr "незаконченная последовательность %s (начиная со строки %d)"
+
+#: llex.c:320
+msgid "hexadecimal digit expected"
+msgstr "ожидается шестнадцатеричная цифра"
+
+#: llex.c:337
+msgid "missing '{'"
+msgstr "отсутствует '{'"
+
+#: llex.c:342
+msgid "UTF-8 value too large"
+msgstr "UTF-8 значение слишком большое"
+
+#: llex.c:344
+msgid "missing '}'"
+msgstr "отсутствует '}'"
+
+#: llex.c:366
+msgid "decimal escape too large"
+msgstr "десятичный знак слишком велик"
+
+#: llex.c:377 llex.c:381
+msgid "unfinished string"
+msgstr "незаконченная строка"
+
+#: llex.c:411
+msgid "invalid escape sequence"
+msgstr "недопустимая escape-последовательность"
+
+#: llex.c:473
+msgid "invalid long string delimiter"
+msgstr "недопустимый разделитель длинной строки"
+
+#: lmathlib.c:131
+msgid "zero"
+msgstr "нуль"
+
+#: lmathlib.c:265
+msgid "wrong number of arguments"
+msgstr "неправильное число параметров"
+
+#: lmathlib.c:268
+msgid "interval is empty"
+msgstr "пустой интервал"
+
+#: lmathlib.c:270
+msgid "interval too large"
+msgstr "слишком большой интервал"
+
+#: lmem.c:54
+#, c-format
+msgid "too many %s (limit is %d)"
+msgstr "слишком много %s (ограниченно %d)"
+
+#: lmem.c:69
+msgid "memory allocation error: block too big"
+msgstr "ошибка распределения памяти: слишком большой блок"
+
+#: lmpdeclib.c:41 lmpdeclib.c:170 lmpdeclib.c:193 lmpdeclib.c:231
+#: lthreadlib.c:202 lthreadlib.c:248
+msgid "not enough memory"
+msgstr "недостаточно памяти"
+
+#: lmpdeclib.c:45
+msgid "IEEE invalide operation"
+msgstr "IEEE недопустимая  операция"
+
+#: lmpdeclib.c:49
+msgid "division by zero"
+msgstr "деление на нуль"
+
+#: lmpdeclib.c:53
+msgid "overflow"
+msgstr "переполнение"
+
+#: lmpdeclib.c:57
+msgid "underflow"
+msgstr "потеря значимости"
+
+#: loadlib.c:174
+msgid "unable to get ModuleFileName"
+msgstr "невозможно получить ModuleFileName"
+
+#: loadlib.c:192
+#, c-format
+msgid "system error %d\n"
+msgstr "системная ошибка %d\n"
+
+#: loadlib.c:449
+#, c-format
+msgid ""
+"\n"
+"\tno file '%s'"
+msgstr ""
+"\n"
+"\tотсутствует файл '%s'"
+
+#: loadlib.c:479
+#, c-format
+msgid "'package.%s' must be a string"
+msgstr "'package.%s' должно быть строкой"
+
+#: loadlib.c:490
+#, c-format
+msgid ""
+"error loading module '%s' from file '%s':\n"
+"\t%s"
+msgstr ""
+"ошибка загрузки модуля '%s' из файла '%s':\n"
+"\t%s"
+
+#: loadlib.c:551
+#, c-format
+msgid ""
+"\n"
+"\tno module '%s' in file '%s'"
+msgstr ""
+"\n"
+"\tотсутствует модуль '%s' в файле '%s'"
+
+#: loadlib.c:564
+#, c-format
+msgid ""
+"\n"
+"\tno field package.preload['%s']"
+msgstr ""
+"\n"
+"\tотсутствует в package.preload['%s']"
+
+#: loadlib.c:575
+msgid "'package.searchers' must be a table"
+msgstr "'package.searchers' должно быть таблицой"
+
+#: loadlib.c:581
+#, c-format
+msgid "module '%s' not found:%s"
+msgstr "модуль '%s' не найден:%s"
+
+#: loadlib.c:639
+msgid "'module' not called from a Lua function"
+msgstr "'module' не вызвана из Lua функции"
+
+#: lobject.c:454
+#, c-format
+msgid "invalid option '%%%c' to 'lua_pushfstring'"
+msgstr "недопустимая опция '%%%c' для 'lua_pushfstring'"
+
+#: loslib.c:71
+msgid "time out-of-bounds"
+msgstr "время за пределами"
+
+#: loslib.c:171
+msgid "unable to generate a unique filename"
+msgstr "невозможно сгенерировать уникальное имя файла"
+
+#: loslib.c:245
+#, c-format
+msgid "field '%s' is not an integer"
+msgstr "поле '%s' не целое число"
+
+#: loslib.c:247
+#, c-format
+msgid "field '%s' missing in date table"
+msgstr "поле '%s' отсутствует в таблице даты"
+
+#: loslib.c:252
+#, c-format
+msgid "field '%s' is out-of-bound"
+msgstr "поле '%s' не связанное"
+
+#: loslib.c:274
+#, c-format
+msgid "invalid conversion specifier '%%%s'"
+msgstr "недопустимый спецификатор преобразования '%%%s'"
+
+#: loslib.c:297 loslib.c:345
+msgid "time result cannot be represented in this installation"
+msgstr "время не может быть представлено в этой установке"
+
+#: lparser.c:75
+#, c-format
+msgid "%s expected"
+msgstr "ожидается %s"
+
+#: lparser.c:84
+msgid "main function"
+msgstr "главной функции"
+
+#: lparser.c:85
+#, c-format
+msgid "function at line %d"
+msgstr "функция на строке %d"
+
+#: lparser.c:86
+#, c-format
+msgid "too many %s (limit is %d) in %s"
+msgstr "слишком много %s (ограниченно %d) %s"
+
+#: lparser.c:128
+#, c-format
+msgid "%s expected (to close %s at line %d)"
+msgstr "ожидается %s (закрыть %s на строке %d)"
+
+#: lparser.c:350
+#, c-format
+msgid "<goto %s> at line %d jumps into the scope of local '%s'"
+msgstr "<перейти %s> в строке %d переходит в область локальной '%s'"
+
+#: lparser.c:466
+#, c-format
+msgid "<%s> at line %d not inside a loop"
+msgstr "<%s> в строке %d не внутри цикла"
+
+#: lparser.c:467
+#, c-format
+msgid "no visible label '%s' for <goto> at line %d"
+msgstr "метка '%s' вне видимости для <goto> в строке %d"
+
+#: lparser.c:775
+msgid "<name> or '...' expected"
+msgstr "ожидается <имя> или '...'"
+
+#: lparser.c:846
+msgid "function arguments expected"
+msgstr "ожидаются аргументы функции"
+
+#: lparser.c:890
+msgid "unexpected symbol"
+msgstr "непредвиденный символ"
+
+#: lparser.c:967
+msgid "cannot use '...' outside a vararg function"
+msgstr "невозможно использовать '...' вне vararg функции"
+
+#: lparser.c:1152 lparser.c:1501
+msgid "syntax error"
+msgstr "синтаксическая ошибка"
+
+#: lparser.c:1211
+#, c-format
+msgid "label '%s' already defined on line %d"
+msgstr "метка '%s' уже определена в строке %d"
+
+#: lparser.c:1378
+msgid "'=' or 'in' expected"
+msgstr "ожидается '=' или 'in'"
+
+#: lparser.c:1658
+msgid "expected function, got method"
+msgstr "ожидается функция, а не метод"
+
+#: lparser.c:1666
+msgid "expected function"
+msgstr "ожидается функция"
+
+#: lserialize.c:138
+msgid "cannot serialize function"
+msgstr "невозможно сериализировать функцию"
+
+#: lserialize.c:179
+#, c-format
+msgid "cannot serialize %s"
+msgstr "невозможно сериализировать %s"
+
+#: lserialize.c:212
+#, c-format
+msgid "serialized data malformed, expected '%s'"
+msgstr "сериализированные данные неккоректны, ожидается '%s'"
+
+#: lserialize.c:217
+msgid "serialized data break"
+msgstr "сериализированное повреждение данных"
+
+#: lserialize.c:254
+msgid "0 or 1"
+msgstr "0 или 1"
+
+#: lserialize.c:387
+#, c-format
+msgid "type '%c' malformed"
+msgstr "тип '%c' некорректен"
+
+#: lstrlib.c:129
+msgid "resulting string too large"
+msgstr "слишком большая результирующая строка"
+
+#: lstrlib.c:158 lstrlib.c:160 lutf8lib.c:111 lutf8lib.c:113
+msgid "string slice too long"
+msgstr "строковая часть слишком длинная"
+
+#: lstrlib.c:174 lutf8lib.c:130
+msgid "value out of range"
+msgstr "значение вне диапазона"
+
+#: lstrlib.c:196
+msgid "unable to dump given function"
+msgstr "невозможно вывести данную функцию"
+
+#: lstrlib.c:245 lstrlib.c:556
+#, c-format
+msgid "invalid capture index %%%d"
+msgstr "недопустимый индекс %%%d"
+
+#: lstrlib.c:254
+msgid "invalid pattern capture"
+msgstr "недопустимый шаблон"
+
+#: lstrlib.c:262
+#, c-format
+msgid "malformed pattern (ends with '%%')"
+msgstr "некорректный шаблон (заканчивается на '%%')"
+
+#: lstrlib.c:269
+msgid "malformed pattern (missing ']')"
+msgstr "некорректный шаблон (отсутствует ']')"
+
+#: lstrlib.c:344
+#, c-format
+msgid "malformed pattern (missing arguments to '%%b')"
+msgstr "некорректный шаблон (отсутствуют аргументы для '%%b')"
+
+#: lstrlib.c:393 lstrlib.c:572
+msgid "too many captures"
+msgstr "слишком много совпадений"
+
+#: lstrlib.c:427
+msgid "pattern too complex"
+msgstr "шаблон слишком сложный"
+
+#: lstrlib.c:461
+#, c-format
+msgid "missing '[' after '%%f' in pattern"
+msgstr "отсутствует '[' после '%%f' в шаблоне"
+
+#: lstrlib.c:560
+msgid "unfinished capture"
+msgstr "незаконченное совпадение"
+
+#: lstrlib.c:715
+#, c-format
+msgid "invalid use of '%c' in replacement string"
+msgstr "недопустимо использование '%c' в замещающей строке"
+
+#: lstrlib.c:757
+#, c-format
+msgid "invalid replacement value (a %s)"
+msgstr "недопустимое заменяющее значение (%s)"
+
+#: lstrlib.c:775
+msgid "string/function/table expected"
+msgstr "ожидается строка/функция/таблица"
+
+#: lstrlib.c:882
+#, c-format
+msgid "modifiers for format '%%a'/'%%A' not implemented"
+msgstr "модификаторы для формата '%%a'/'%%A' не реализованы"
+
+#: lstrlib.c:975
+msgid "value has no literal form"
+msgstr "значение не имеет никакой литеральной формы"
+
+#: lstrlib.c:985
+msgid "invalid format (repeated flags)"
+msgstr "недопустимый формат (повторяемые флаги)"
+
+#: lstrlib.c:994
+msgid "invalid format (width or precision too long)"
+msgstr "недопустимый формат (ширина или точность слишком длинная)"
+
+#: lstrlib.c:1034
+msgid "no value"
+msgstr "отсутствует значение"
+
+#: lstrlib.c:1070 lstrlib.c:1400
+msgid "string contains zeros"
+msgstr "строка содержит нули"
+
+#: lstrlib.c:1083
+#, c-format
+msgid "invalid option '%%%c' to 'format'"
+msgstr "недопустимая опция '%%%c' для 'format'"
+
+#: lstrlib.c:1202
+#, c-format
+msgid "integral size (%d) out of limits [1,%d]"
+msgstr "интегральный размер (%d) вне границ [1,%d]"
+
+#: lstrlib.c:1243
+msgid "missing size for format option 'c'"
+msgstr "отсутствует размер для параметра формата 'c'"
+
+#: lstrlib.c:1253
+#, c-format
+msgid "invalid format option '%c'"
+msgstr "неверный формат '%c'"
+
+#: lstrlib.c:1274
+msgid "invalid next option for option 'X'"
+msgstr "недопустимая следующая опция для опции 'X'"
+
+#: lstrlib.c:1282
+msgid "format asks for alignment not power of 2"
+msgstr "формат требует выравнивания не по основанию 2"
+
+#: lstrlib.c:1351
+msgid "integer overflow"
+msgstr "целочисленное переполнение"
+
+#: lstrlib.c:1360
+msgid "unsigned overflow"
+msgstr "беззнаковое переполнение"
+
+#: lstrlib.c:1380
+msgid "string longer than given size"
+msgstr "строка длиннее заданного размера"
+
+#: lstrlib.c:1391
+msgid "string length does not fit in given size"
+msgstr "длина строки не подходит для данного размера"
+
+#: lstrlib.c:1427
+msgid "format result too large"
+msgstr "слишком большой результат форматирования"
+
+#: lstrlib.c:1432
+msgid "variable-length format"
+msgstr "формат переменной длины"
+
+#: lstrlib.c:1469
+#, c-format
+msgid "%d-byte integer does not fit into Lua Integer"
+msgstr "целое %d-байт не вписывается в целое значение Lua"
+
+#: lstrlib.c:1483 lutf8lib.c:78
+msgid "initial position out of string"
+msgstr "начальная позиция вне строки"
+
+#: lstrlib.c:1489 lstrlib.c:1518
+msgid "data string too short"
+msgstr "данные представляют в виде слишком короткой строки"
+
+#: lstrlib.c:1492
+msgid "too many results"
+msgstr "слишком много результатов"
+
+#: ltable.c:179
+msgid "invalid key to 'next'"
+msgstr "недопустимый ключ к 'next'"
+
+#: ltable.c:320
+msgid "table overflow"
+msgstr "таблица переполнена"
+
+#: ltable.c:464
+msgid "table index is nil"
+msgstr "индекс таблицы = неопределено"
+
+#: ltable.c:472
+msgid "table index is NaN"
+msgstr "индекс таблицы = NaN"
+
+#: ltablib.c:90 ltablib.c:110
+msgid "position out of bounds"
+msgstr "позиция за пределами"
+
+#: ltablib.c:98
+msgid "wrong number of arguments to 'insert'"
+msgstr "неправильное число параметров для 'insert'"
+
+#: ltablib.c:138
+msgid "too many elements to move"
+msgstr "слишком много элементов для перемещения"
+
+#: ltablib.c:141
+msgid "destination wrap around"
+msgstr "назначение обернуто вокруг"
+
+#: ltablib.c:163
+#, c-format
+msgid "invalid value (%s) at index %d in table for 'concat'"
+msgstr "недопустимое значение (%s) по индексу %d в таблице для 'concat'"
+
+#: ltablib.c:214
+msgid "too many results to unpack"
+msgstr "слишком много результатов для распаковки"
+
+#: ltablib.c:318 ltablib.c:325
+msgid "invalid order function for sorting"
+msgstr "недопустимая функция сравнения для упорядочивания"
+
+#: ltablib.c:414
+msgid "array too big"
+msgstr "массив слишком большой"
+
+#: lthreadlib.c:183 lua.c:625 luac.c:214
+msgid "cannot create state: not enough memory"
+msgstr "невозможно создать контекст: недостаточно памяти"
+
+#: lthreadlib.c:219
+msgid "cannot create thread"
+msgstr "невозможно создать поток"
+
+#: lthreadlib.c:332
+msgid "not implement to main thread"
+msgstr "не реализовано для основного потока"
+
+#: ltm.c:148
+msgid "perform bitwise operation on"
+msgstr "выполнить побитовую операцию на"
+
+#: ltm.c:152
+msgid "perform arithmetic on"
+msgstr "выполнять арифметику на"
+
+#: lua.c:113
+msgid "interrupted!"
+msgstr "прерванный!"
+
+#: lua.c:132
+#, c-format
+msgid "'%s' needs argument\n"
+msgstr "'%s' необходим аргумент\n"
+
+#: lua.c:134
+#, c-format
+msgid "unrecognized option '%s'\n"
+msgstr "нераспознанная опция '%s'\n"
+
+#: lua.c:136
+#, c-format
+msgid ""
+"usage: %s [options] [script [args]]\n"
+"Available options are:\n"
+"  -e stat  execute string 'stat'\n"
+"  -i       enter interactive mode after executing 'script'\n"
+"  -l name  require library 'name' into global 'name'\n"
+"  -v       show version information\n"
+"  -E       ignore environment variables\n"
+"  --       stop handling options\n"
+"  -        stop handling options and execute stdin\n"
+msgstr ""
+"Использование: %s [опции] [скрипт [аргументы]]\n"
+"Доступные опции:\n"
+"  -e строка  выполнить строку\n"
+"  -i       открыть интерактивный режим после выполнения скрипта\n"
+"  -l имя  подключить библиотеку 'имя' как глобальную переменную 'имя'\n"
+"  -v       показать информацию о версии\n"
+"  -E       игнорировать переменные окружения\n"
+"  --       прекратить обрабатывать опции\n"
+"  -        прекратить обрабатывать опции и обработать стандартный поток "
+"ввода\n"
+
+#: lua.c:390
+msgid "too many results to print"
+msgstr "слишком много результатов для вывода"
+
+#: lua.c:394
+#, c-format
+msgid "error calling 'print' (%s)"
+msgstr "ошибка вызова 'print' (%s)"
+
+#: lua.c:426
+msgid "'arg' is not a table"
+msgstr "'arg' не является таблицой"
+
+#: lua.c:428
+msgid "too many arguments to script"
+msgstr "слишком много параметров для сценария"
+
+#: luac.c:47
+#, c-format
+msgid "%s: cannot %s %s: %s\n"
+msgstr "%s: невозможно %s %s: %s\n"
+
+#: luac.c:54
+#, c-format
+msgid "%s: unrecognized option '%s'\n"
+msgstr "%s: нераспознанная опция '%s'\n"
+
+#: luac.c:58
+#, c-format
+msgid ""
+"usage: %s [options] [filenames]\n"
+"Available options are:\n"
+"  -l       list (use -l -l for full listing)\n"
+"  -o name  output to file 'name' (default is \"%s\")\n"
+"  -p       parse only\n"
+"  -s       strip debug information\n"
+"  -v       show version information\n"
+"  --       stop handling options\n"
+"  -        stop handling options and process stdin\n"
+msgstr ""
+"Использование: %s [опции] [имена файлов]\n"
+"Доступные опции:\n"
+"  -l       вывести список (используйте -l -l для вывода полного списка)\n"
+"  -o имя выходного файла (по умолчанию \"%s\")\n"
+"  -p       выполнить только синтаксический анализ\n"
+"  -s       убрать отладочную информацию\n"
+"  -v       показать информацию о версии\n"
+"  --       прекратить обрабатывать опции\n"
+"  -        прекратить обрабатывать опции и обработать стандартный поток "
+"ввода\n"
+
+#: luac.c:96
+msgid "'-o' needs argument"
+msgstr "'-o' необходим аргумент"
+
+#: luac.c:172
+msgid "too many input files"
+msgstr "слишком много входных файлов"
+
+#: luac.c:212
+msgid "no input files given"
+msgstr "никакие входные файлы не даны"
+
+#: lundump.c:40
+#, c-format
+msgid "%s: %s precompiled chunk"
+msgstr "%s: %s предварительно скомпилированный блок"
+
+#: lundump.c:230
+#, c-format
+msgid "%s size mismatch in"
+msgstr "%s несоответствие размера в"
+
+#: lutf8lib.c:80
+msgid "final position out of string"
+msgstr "окончательная позиция вне строки"
+
+#: lutf8lib.c:107 lutf8lib.c:108
+msgid "out of range"
+msgstr "вне диапазона"
+
+#: lutf8lib.c:120 lutf8lib.c:217
+msgid "invalid UTF-8 code"
+msgstr "недопустимый UTF-8 код"
+
+#: lutf8lib.c:167
+msgid "position out of range"
+msgstr "позиция вне диапазона"
+
+#: lutf8lib.c:174
+msgid "initial position is a continuation byte"
+msgstr "начальная позиция является последующим байтом"
+
+#: lvm.c:193
+msgid "'__index' chain too long; possible loop"
+msgstr "'__index' цепочка слишком длинная; возможно зацикливание"
+
+#: lvm.c:238
+msgid "'__newindex' chain too long; possible loop"
+msgstr "'__newindex' цепочка слишком длинная; возможно зацикливание"
+
+#: lvm.c:508
+msgid "string length overflow"
+msgstr "переполнение длины строки"
+
+#: lvm.c:569
+msgid "attempt to divide by zero"
+msgstr "попытка деленя на ноль"
+
+#: lvm.c:589
+#, c-format
+msgid "attempt to perform 'n%%0'"
+msgstr "попытка выполнить 'n%%0'"
+
+#: lvm.c:1268
+msgid "'for' limit must be a number"
+msgstr "'for' предел должен быть числом"
+
+#: lvm.c:1271
+msgid "'for' step must be a number"
+msgstr "'for' шаг должен быть числом"
+
+#: lvm.c:1274
+msgid "'for' initial value must be a number"
+msgstr "'for' начальное значение должно быть числом"
+
+#~ msgid "%s"
+#~ msgstr "%s"
+
+#~ msgid "invalid decimal value"
+#~ msgstr "недопустимое десятичное значение"
+
+#~ msgid "arithmetic operation failed"
+#~ msgstr "arithmetic operation failed"
+
+#~ msgid "compare failed"
+#~ msgstr "сбой сравнения"

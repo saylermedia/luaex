@@ -168,10 +168,10 @@ static int b_rrot (lua_State *L) {
 static int fieldargs (lua_State *L, int farg, int *width) {
   lua_Integer f = luaL_checkinteger(L, farg);
   lua_Integer w = luaL_optinteger(L, farg + 1, 1);
-  luaL_argcheck(L, 0 <= f, farg, "field cannot be negative");
-  luaL_argcheck(L, 0 < w, farg + 1, "width must be positive");
+  luaL_argcheck(L, 0 <= f, farg, _("field cannot be negative"));
+  luaL_argcheck(L, 0 < w, farg + 1, _("width must be positive"));
   if (f + w > LUA_NBITS)
-    luaL_error(L, "trying to access non-existent bits");
+    luaL_error(L, _("trying to access non-existent bits"));
   *width = (int)w;
   return (int)f;
 }
@@ -227,7 +227,7 @@ LUAMOD_API int luaopen_bit32 (lua_State *L) {
 
 
 LUAMOD_API int luaopen_bit32 (lua_State *L) {
-  return luaL_error(L, "library 'bit32' has been deprecated");
+  return luaL_error(L, _("library 'bit32' has been deprecated"));
 }
 
 #endif					/* } */

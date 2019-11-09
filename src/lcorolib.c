@@ -20,7 +20,7 @@
 
 static lua_State *getco (lua_State *L) {
   lua_State *co = lua_tothread(L, 1);
-  luaL_argcheck(L, co, 1, "thread expected");
+  luaL_argcheck(L, co, 1, _("thread expected"));
   return co;
 }
 
@@ -28,7 +28,11 @@ static lua_State *getco (lua_State *L) {
 static int auxresume (lua_State *L, lua_State *co, int narg) {
   int status;
   if (!lua_checkstack(co, narg)) {
+#ifdef LUAEX_I18N
+    lua_pushstring(L, _("too many arguments to resume"));
+#else
     lua_pushliteral(L, "too many arguments to resume");
+#endif
     return -1;  /* error flag */
   }
   if (lua_status(co) == LUA_OK && lua_gettop(co) == 0) {
@@ -41,7 +45,11 @@ static int auxresume (lua_State *L, lua_State *co, int narg) {
     int nres = lua_gettop(co);
     if (!lua_checkstack(L, nres + 1)) {
       lua_pop(co, nres);  /* remove results anyway */
+    #ifdef LUAEX_I18N
+      lua_pushstring(L, _("too many results to resume"));
+    #else
       lua_pushliteral(L, "too many results to resume");
+    #endif
       return -1;  /* error flag */
     }
     lua_xmove(co, L, nres);  /* move yielded values */

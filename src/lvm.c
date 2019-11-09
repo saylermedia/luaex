@@ -190,7 +190,7 @@ void luaV_finishget (lua_State *L, const TValue *t, TValue *key, StkId val,
     }
     /* else repeat (tail call 'luaV_finishget') */
   }
-  luaG_runerror(L, "'__index' chain too long; possible loop");
+  luaG_runerror(L, _("'__index' chain too long; possible loop"));
 }
 
 
@@ -235,7 +235,7 @@ void luaV_finishset (lua_State *L, const TValue *t, TValue *key,
       return;  /* done */
     /* else loop */
   }
-  luaG_runerror(L, "'__newindex' chain too long; possible loop");
+  luaG_runerror(L, _("'__newindex' chain too long; possible loop"));
 }
 
 
@@ -408,6 +408,19 @@ int luaV_lessequal (lua_State *L, const TValue *l, const TValue *r) {
 int luaV_equalobj (lua_State *L, const TValue *t1, const TValue *t2) {
   const TValue *tm;
   if (ttype(t1) != ttype(t2)) {  /* not the same variant? */
+#ifdef LUAEX_MPDECIMAL
+    if (L != NULL) {
+      if (ttype(t1) == LUA_TUSERDATA || ttype(t2) == LUA_TUSERDATA) {
+        tm = (ttype(t1) == LUA_TUSERDATA) ? fasttm(L, uvalue(t1)->metatable, TM_EQ) : NULL;
+        if (tm == NULL && ttype(t2) == LUA_TUSERDATA)
+          tm = fasttm(L, uvalue(t2)->metatable, TM_EQ);
+        if (tm) {
+          luaT_callTM(L, tm, t1, t2, L->top, 1);  /* call TM */
+          return !l_isfalse(L->top);
+        }
+      }
+    }
+#endif
     if (ttnov(t1) != ttnov(t2) || ttnov(t1) != LUA_TNUMBER)
       return 0;  /* only numbers can be equal with different variants */
     else {  /* two numbers with different variants */
@@ -492,7 +505,7 @@ void luaV_concat (lua_State *L, int total) {
       for (n = 1; n < total && tostring(L, top - n - 1); n++) {
         size_t l = vslen(top - n - 1);
         if (l >= (MAX_SIZE/sizeof(char)) - tl)
-          luaG_runerror(L, "string length overflow");
+          luaG_runerror(L, _("string length overflow"));
         tl += l;
       }
       if (tl <= LUAI_MAXSHORTLEN) {  /* is result a short string? */
@@ -553,7 +566,7 @@ void luaV_objlen (lua_State *L, StkId ra, const TValue *rb) {
 lua_Integer luaV_div (lua_State *L, lua_Integer m, lua_Integer n) {
   if (l_castS2U(n) + 1u <= 1u) {  /* special cases: -1 or 0 */
     if (n == 0)
-      luaG_runerror(L, "attempt to divide by zero");
+      luaG_runerror(L, _("attempt to divide by zero"));
     return intop(-, 0, m);   /* n==-1; avoid overflow with 0x80000...//-1 */
   }
   else {
@@ -573,7 +586,7 @@ lua_Integer luaV_div (lua_State *L, lua_Integer m, lua_Integer n) {
 lua_Integer luaV_mod (lua_State *L, lua_Integer m, lua_Integer n) {
   if (l_castS2U(n) + 1u <= 1u) {  /* special cases: -1 or 0 */
     if (n == 0)
-      luaG_runerror(L, "attempt to perform 'n%%0'");
+      luaG_runerror(L, _("attempt to perform 'n%%0'"));
     return 0;   /* m % -1 == 0; avoid overflow with 0x80000...%-1 */
   }
   else {
@@ -1252,13 +1265,13 @@ void luaV_execute (lua_State *L) {
         else {  /* try making all values floats */
           lua_Number ninit; lua_Number nlimit; lua_Number nstep;
           if (!tonumber(plimit, &nlimit))
-            luaG_runerror(L, "'for' limit must be a number");
+            luaG_runerror(L, _("'for' limit must be a number"));
           setfltvalue(plimit, nlimit);
           if (!tonumber(pstep, &nstep))
-            luaG_runerror(L, "'for' step must be a number");
+            luaG_runerror(L, _("'for' step must be a number"));
           setfltvalue(pstep, nstep);
           if (!tonumber(init, &ninit))
-            luaG_runerror(L, "'for' initial value must be a number");
+            luaG_runerror(L, _("'for' initial value must be a number"));
           setfltvalue(init, luai_numsub(L, ninit, nstep));
         }
         ci->u.l.savedpc += GETARG_sBx(i);
@@ -1363,7 +1376,7 @@ void luaV_execute (lua_State *L) {
           srvclnt = LUAEX_SSERVER;
         vmbreak;
       }
-    #endif
+  #endif
       vmcase(OP_EXTRAARG) {
         lua_assert(0);
         vmbreak;

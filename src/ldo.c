@@ -199,7 +199,7 @@ void luaD_growstack (lua_State *L, int n) {
     if (newsize < needed) newsize = needed;
     if (newsize > LUAI_MAXSTACK) {  /* stack overflow? */
       luaD_reallocstack(L, ERRORSTACKSIZE);
-      luaG_runerror(L, "stack overflow");
+      luaG_runerror(L, _("stack overflow"));
     }
     else
       luaD_reallocstack(L, newsize);
@@ -480,7 +480,7 @@ int luaD_precall (lua_State *L, StkId func, int nresults) {
 */
 static void stackerror (lua_State *L) {
   if (L->nCcalls == LUAI_MAXCCALLS)
-    luaG_runerror(L, "C stack overflow");
+    luaG_runerror(L, _("C stack overflow"));
   else if (L->nCcalls >= (LUAI_MAXCCALLS + (LUAI_MAXCCALLS>>3)))
     luaD_throw(L, LUA_ERRERR);  /* error while handing stack error */
 }
@@ -697,14 +697,14 @@ LUA_API int lua_yieldk (lua_State *L, int nresults, lua_KContext ctx,
   api_checknelems(L, nresults);
   if (L->nny > 0) {
     if (L != G(L)->mainthread)
-      luaG_runerror(L, "attempt to yield across a C-call boundary");
+      luaG_runerror(L, _("attempt to yield across a C-call boundary"));
     else
-      luaG_runerror(L, "attempt to yield from outside a coroutine");
+      luaG_runerror(L, _("attempt to yield from outside a coroutine"));
   }
   L->status = LUA_YIELD;
   ci->extra = savestack(L, ci->func);  /* save current 'func' */
   if (isLua(ci)) {  /* inside a hook? */
-    api_check(L, k == NULL, "hooks cannot continue after yielding");
+    api_check(L, k == NULL, _("hooks cannot continue after yielding"));
   }
   else {
     if ((ci->u.c.k = k) != NULL)  /* is there a continuation? */
@@ -757,7 +757,7 @@ struct SParser {  /* data to 'f_parser' */
 static void checkmode (lua_State *L, const char *mode, const char *x) {
   if (mode && strchr(mode, x[0]) == NULL) {
     luaO_pushfstring(L,
-       "attempt to load a %s chunk (mode is '%s')", x, mode);
+       _("attempt to load a %s chunk (mode is '%s')"), x, mode);
     luaD_throw(L, LUA_ERRSYNTAX);
   }
 }

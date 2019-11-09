@@ -171,7 +171,7 @@ static void setprogdir (lua_State *L) {
   DWORD nsize = sizeof(buff)/sizeof(char);
   DWORD n = GetModuleFileNameA(NULL, buff, nsize);  /* get exec. name */
   if (n == 0 || n == nsize || (lb = strrchr(buff, '\\')) == NULL)
-    luaL_error(L, "unable to get ModuleFileName");
+    luaL_error(L, _("unable to get ModuleFileName"));
   else {
     *lb = '\0';  /* cut name on the last '\\' to get the path */
     luaL_gsub(L, lua_tostring(L, -1), LUA_EXEC_DIR, buff);
@@ -189,7 +189,7 @@ static void pusherror (lua_State *L) {
       NULL, error, 0, buffer, sizeof(buffer)/sizeof(char), NULL))
     lua_pushstring(L, buffer);
   else
-    lua_pushfstring(L, "system error %d\n", error);
+    lua_pushfstring(L, _("system error %d\n"), error);
 }
 
 static void lsys_unloadlib (void *lib) {
@@ -446,7 +446,7 @@ static const char *searchpath (lua_State *L, const char *name,
     lua_remove(L, -2);  /* remove path template */
     if (readable(filename))  /* does file exist and is readable? */
       return filename;  /* return that file name */
-    lua_pushfstring(L, "\n\tno file '%s'", filename);
+    lua_pushfstring(L, _("\n\tno file '%s'"), filename);
     lua_remove(L, -2);  /* remove file name */
     luaL_addvalue(&msg);  /* concatenate error msg. entry */
   }
@@ -476,7 +476,7 @@ static const char *findfile (lua_State *L, const char *name,
   lua_getfield(L, lua_upvalueindex(1), pname);
   path = lua_tostring(L, -1);
   if (path == NULL)
-    luaL_error(L, "'package.%s' must be a string", pname);
+    luaL_error(L, _("'package.%s' must be a string"), pname);
   return searchpath(L, name, path, ".", dirsep);
 }
 
@@ -487,7 +487,7 @@ static int checkload (lua_State *L, int stat, const char *filename) {
     return 2;  /* return open function and file name */
   }
   else
-    return luaL_error(L, "error loading module '%s' from file '%s':\n\t%s",
+    return luaL_error(L, _("error loading module '%s' from file '%s':\n\t%s"),
                           lua_tostring(L, 1), filename, lua_tostring(L, -1));
 }
 
@@ -548,7 +548,7 @@ static int searcher_Croot (lua_State *L) {
     if (stat != ERRFUNC)
       return checkload(L, 0, filename);  /* real error */
     else {  /* open function not found */
-      lua_pushfstring(L, "\n\tno module '%s' in file '%s'", name, filename);
+      lua_pushfstring(L, _("\n\tno module '%s' in file '%s'"), name, filename);
       return 1;
     }
   }
@@ -561,7 +561,7 @@ static int searcher_preload (lua_State *L) {
   const char *name = luaL_checkstring(L, 1);
   lua_getfield(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
   if (lua_getfield(L, -1, name) == LUA_TNIL)  /* not found? */
-    lua_pushfstring(L, "\n\tno field package.preload['%s']", name);
+    lua_pushfstring(L, _("\n\tno field package.preload['%s']"), name);
   return 1;
 }
 
@@ -572,13 +572,13 @@ static void findloader (lua_State *L, const char *name) {
   luaL_buffinit(L, &msg);
   /* push 'package.searchers' to index 3 in the stack */
   if (lua_getfield(L, lua_upvalueindex(1), "searchers") != LUA_TTABLE)
-    luaL_error(L, "'package.searchers' must be a table");
+    luaL_error(L, _("'package.searchers' must be a table"));
   /*  iterate over available searchers to find a loader */
   for (i = 1; ; i++) {
     if (lua_rawgeti(L, 3, i) == LUA_TNIL) {  /* no more searchers? */
       lua_pop(L, 1);  /* remove nil */
       luaL_pushresult(&msg);  /* create error message */
-      luaL_error(L, "module '%s' not found:%s", name, lua_tostring(L, -1));
+      luaL_error(L, _("module '%s' not found:%s"), name, lua_tostring(L, -1));
     }
     lua_pushstring(L, name);
     lua_call(L, 1, 2);  /* call it */
@@ -636,7 +636,7 @@ static void set_env (lua_State *L) {
   if (lua_getstack(L, 1, &ar) == 0 ||
       lua_getinfo(L, "f", &ar) == 0 ||  /* get calling function */
       lua_iscfunction(L, -1))
-    luaL_error(L, "'module' not called from a Lua function");
+    luaL_error(L, _("'module' not called from a Lua function"));
   lua_pushvalue(L, -2);  /* copy new environment table to top */
   lua_setupvalue(L, -2, 1);
   lua_pop(L, 1);  /* remove function */
