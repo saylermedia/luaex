@@ -55,7 +55,7 @@ LUA_API int lua_lopen (const char *locale) {
     }
   #else
     return 0;
-	#endif
+  #endif
   }
   if (file) {
     uint32_t value;
