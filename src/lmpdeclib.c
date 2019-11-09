@@ -312,6 +312,15 @@ static const luaL_Reg mtlib[] = {
   (void) ctx;
 }*/
 
+#define DEC_DFLT_EMAX 999999
+#define DEC_DFLT_EMIN -999999
+
+static mpd_context_t dflt_ctx = {
+  28, DEC_DFLT_EMAX, DEC_DFLT_EMIN,
+  MPD_IEEE_Invalid_operation | MPD_Division_by_zero | MPD_Overflow,
+  0, 0, MPD_ROUND_HALF_EVEN, 0, 1
+};
+
 
 LUAMOD_API int luaopen_number (lua_State *L) {
   /*if (!initialized) {
@@ -323,7 +332,8 @@ LUAMOD_API int luaopen_number (lua_State *L) {
     mpd_setminalloc(DEC_MINALLOC);
     initialized = 1;
   }*/
-  mpd_maxcontext(&L->mpd_ctx);
+  L->mpd_ctx = dflt_ctx;
+  /*mpd_maxcontext(&L->mpd_ctx);*/
   /* register mpdec library */
   luaL_newlib(L, numberlib);  /* new module */
   luaL_newlib(L, mtlib);
