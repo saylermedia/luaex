@@ -4,7 +4,7 @@
 ** Copyright (C) 2019, Alexey Smirnov <saylermedia@gmail.com>
 */
 
-#define mpdeclib_c
+#define declib_c
 #define LUA_LIB
 
 #include "lprefix.h"
@@ -21,7 +21,7 @@
 #include <malloc.h>
 #include <mpdecimal.h>
 
-#define LUA_NUMBERHANDLE "NUMBER*"
+#define LUA_DECIMALHANDLE "DECIMAL*"
 
 #define DEC_MINALLOC 4
 
@@ -40,23 +40,25 @@ static void dec_addstatus (lua_State *L, uint32_t status) {
     if (status & MPD_Malloc_error)
       luaL_error(L, _("not enough memory"));
     
-    switch ((ctx->traps & status)) {
-      case MPD_IEEE_Invalid_operation:
+    int flags = (ctx->traps & status);
+    if (flags & MPD_IEEE_Invalid_operation)
         luaL_error(L, _("IEEE invalide operation"));
-        break;
-        
-      case MPD_Division_by_zero:
+    else if (flags & MPD_Division_by_zero)
         luaL_error(L, _("division by zero"));
-        break;
-        
-      case MPD_Overflow:
+    else if (flags & MPD_Overflow)
         luaL_error(L, _("overflow"));
-        break;
-        
-      case MPD_Underflow:
+    else if (flags & MPD_Underflow)
         luaL_error(L, _("underflow"));
-        break;
-    }
+    else if (flags & MPD_Subnormal)
+        luaL_error(L, _("subnormal"));
+    else if (flags & MPD_Inexact)   
+        luaL_error(L, _("inexact"));
+    else if (flags & MPD_Rounded)    
+        luaL_error(L, _("rounded"));
+    else if (flags & MPD_Clamped)    
+        luaL_error(L, _("clamped"));
+      
+    luaL_error(L, _("operation failed"));
   }
 }
 
@@ -68,25 +70,41 @@ static DecimalState * create(lua_State *L) {
   ds->v.len = 0;
   ds->v.alloc = DEC_MINALLOC;
   ds->v.data = ds->data;
-  luaL_setmetatable(L, LUA_NUMBERHANDLE);
+  luaL_setmetatable(L, LUA_DECIMALHANDLE);
   return ds;
 }
 
 
 static DecimalState * todecimal (lua_State *L, int idx, int *convidx) {
-  DecimalState *ds = (DecimalState *) luaL_testudata(L, idx, LUA_NUMBERHANDLE);
+  DecimalState *ds = (DecimalState *) luaL_testudata(L, idx, LUA_DECIMALHANDLE);
   if (ds)
     *convidx = 0;
   else {
-    const char *s = luaL_checkstring(L, idx);
+    const char *s;
+    size_t l;
+    switch (lua_type(L, idx)) {
+      case LUA_TBOOLEAN:
+        s = (lua_toboolean(L, idx)) ? "1" : "0";
+        break;
+        
+      case LUA_TNUMBER:
+      case LUA_TSTRING:
+      case LUA_TTABLE:
+      case LUA_TUSERDATA:
+        s = luaL_tolstring(L, idx, &l);
+        if (s == NULL)
+          luaL_error(L, _("cannot convert value to decimal"));
+        break;
+        
+      default:
+        luaL_error(L, _("cannot convert type %s to decimal"), lua_typename(L, lua_type(L, idx)));
+        break;
+    }
     ds = create(L);
     mpd_context_t maxctx;
     mpd_maxcontext(&maxctx);
     uint32_t status = 0;
     mpd_qset_string(&ds->v, s, &maxctx, &status);
-    if (status & (MPD_Inexact | MPD_Rounded | MPD_Clamped))
-        mpd_seterror(&ds->v, MPD_Invalid_operation, &status);
-    status &= MPD_Errors;
     dec_addstatus(L, status);
     *convidx = lua_gettop(L);
   }
@@ -95,8 +113,8 @@ static DecimalState * todecimal (lua_State *L, int idx, int *convidx) {
 
 
 #define UNARY_OP(FUNCNAME) \
-static int n_##FUNCNAME (lua_State *L) { \
-  DecimalState *a = (DecimalState *) luaL_checkudata(L, 1, LUA_NUMBERHANDLE); \
+static int dec_##FUNCNAME (lua_State *L) { \
+  DecimalState *a = (DecimalState *) luaL_checkudata(L, 1, LUA_DECIMALHANDLE); \
   DecimalState *r = create(L); \
   uint32_t status = 0; \
   FUNCNAME(&r->v, &a->v, &L->mpd_ctx, &status); \
@@ -106,9 +124,9 @@ static int n_##FUNCNAME (lua_State *L) { \
 
 
 #define BINARY_OP(FUNCNAME) \
-static int n_##FUNCNAME (lua_State *L) { \
+static int dec_##FUNCNAME (lua_State *L) { \
   int convidx;  \
-  DecimalState *a = (DecimalState *) luaL_checkudata(L, 1, LUA_NUMBERHANDLE); \
+  DecimalState *a = (DecimalState *) luaL_checkudata(L, 1, LUA_DECIMALHANDLE); \
   DecimalState *b = todecimal(L, 2, &convidx);  \
   DecimalState *r = create(L);  \
   uint32_t status = 0; \
@@ -119,11 +137,16 @@ static int n_##FUNCNAME (lua_State *L) { \
 }
 
 
-static int n_new (lua_State *L) {
+static int dec_new (lua_State *L) {
   int convidx;
-  todecimal(L, 1, &convidx);
-  if (!convidx)
-    lua_pushvalue(L, 1);
+  luaL_checkany(L, 1);
+  DecimalState *ds = todecimal(L, 1, &convidx);
+  if (!convidx) {
+    DecimalState *r = create(L);
+    uint32_t status = 0;
+    mpd_qcopy(&r->v, &ds->v, &status);
+    dec_addstatus(L, status);
+  }
   return 1;
 }
 
@@ -145,8 +168,8 @@ UNARY_OP(mpd_qceil)
 UNARY_OP(mpd_qtrunc)
 
 
-static int n_round (lua_State *L) {
-  DecimalState *a = (DecimalState *) luaL_checkudata(L, 1, LUA_NUMBERHANDLE);
+static int dec_round (lua_State *L) {
+  DecimalState *a = (DecimalState *) luaL_checkudata(L, 1, LUA_DECIMALHANDLE);
   mpd_ssize_t y = (mpd_ssize_t) luaL_optinteger(L, 2, 0);
   DecimalState *r = create(L);
   mpd_uint_t dq[1] = {1};
@@ -159,7 +182,7 @@ static int n_round (lua_State *L) {
 }
 
 
-static int n_shl (lua_State *L) {
+static int dec_shl (lua_State *L) {
   int convidx1, convidx2;
   DecimalState *a = todecimal(L, 1, &convidx1);
   DecimalState *b = todecimal(L, 2, &convidx2);
@@ -182,7 +205,7 @@ static int n_shl (lua_State *L) {
 }
 
 
-static int n_shr (lua_State *L) {
+static int dec_shr (lua_State *L) {
   int convidx1, convidx2;
   DecimalState *a = todecimal(L, 1, &convidx1);
   DecimalState *b = todecimal(L, 2, &convidx2);
@@ -206,7 +229,7 @@ static int n_shr (lua_State *L) {
 
 
 #define COMPARE(FUNCNAME,SIGN) \
-static int n_##FUNCNAME (lua_State *L) { \
+static int dec_##FUNCNAME (lua_State *L) { \
   int convidx1, convidx2; \
   DecimalState *a = todecimal(L, 1, &convidx1); \
   DecimalState *b = todecimal(L, 2, &convidx2); \
@@ -224,19 +247,21 @@ COMPARE(lt, <)
 COMPARE(le, <=)
 
 
-static int n_tostring (lua_State *L) {
-  DecimalState *ds = (DecimalState *) luaL_checkudata(L, 1, LUA_NUMBERHANDLE);
-  char *rstring = mpd_to_sci(&ds->v, 1);
-  if (rstring == NULL)
+static int dec_tostring (lua_State *L) {
+  DecimalState *ds = (DecimalState *) luaL_checkudata(L, 1, LUA_DECIMALHANDLE);
+  mpd_ssize_t size;
+  char *s;
+  size = mpd_to_sci_size(&s, &ds->v, 1);
+  if (size < 0)
     luaL_error(L, _("not enough memory"));
-  lua_pushstring(L, rstring);
-  mpd_free(rstring);
+  lua_pushlstring(L, s, (size_t) size);
+  mpd_free(s);
   return 1;
 }
 
 
-static int n_gc (lua_State *L) {
-  DecimalState *ds = (DecimalState *) luaL_checkudata(L, 1, LUA_NUMBERHANDLE);
+static int dec_gc (lua_State *L) {
+  DecimalState *ds = (DecimalState *) luaL_checkudata(L, 1, LUA_DECIMALHANDLE);
   mpd_del(&ds->v);
   return 0;
 }
@@ -245,72 +270,78 @@ static int n_gc (lua_State *L) {
 /*
 ** functions for 'number' library
 */
-static const luaL_Reg numberlib[] = {
-  {"new", n_new},
+static const luaL_Reg dec_lib[] = {
+  {"new", dec_new},
   {NULL, NULL}
 };
 
 
 /*
-** methods for number handles
+** methods for decimal handles
 */
-static const luaL_Reg nlib[] = {
-  {"abs", n_mpd_qabs},
-  {"floor", n_mpd_qfloor},
-  {"ceil", n_mpd_qceil},
-  {"trunc", n_mpd_qtrunc},
-  {"round", n_round},
-  {"__add", n_mpd_qadd},
-  {"__sub", n_mpd_qsub},
-  {"__mul", n_mpd_qmul},
-  {"__div", n_mpd_qdiv},
-  {"__mod", n_mpd_qrem},
-  {"__pow", n_mpd_qpow},
-  {"__unm", n_mpd_qminus},
-  {"__idiv", n_mpd_qdivint},
-  {"__band", n_mpd_qand},
-  {"__bor", n_mpd_qor},
-  {"__bxor", n_mpd_qxor},
-  {"__shl", n_shl},
-  {"__shr", n_shr},
-  {"__eq", n_eq},
-  {"__lt", n_lt},
-  {"__le", n_le},
-  {"__tostring", n_tostring},
-  {"__serialize", n_tostring},
-  {"__deserialize", n_new},
-  {"__gc", n_gc},
+static const luaL_Reg dec_methods[] = {
+  {"abs", dec_mpd_qabs},
+  {"floor", dec_mpd_qfloor},
+  {"ceil", dec_mpd_qceil},
+  {"trunc", dec_mpd_qtrunc},
+  {"round", dec_round},
+  {"__add", dec_mpd_qadd},
+  {"__sub", dec_mpd_qsub},
+  {"__mul", dec_mpd_qmul},
+  {"__div", dec_mpd_qdiv},
+  {"__mod", dec_mpd_qrem},
+  {"__pow", dec_mpd_qpow},
+  {"__unm", dec_mpd_qminus},
+  {"__idiv", dec_mpd_qdivint},
+  {"__band", dec_mpd_qand},
+  {"__bor", dec_mpd_qor},
+  {"__bxor", dec_mpd_qxor},
+  {"__shl", dec_shl},
+  {"__shr", dec_shr},
+  {"__eq", dec_eq},
+  {"__lt", dec_lt},
+  {"__le", dec_le},
+  {"__tostring", dec_tostring},
+  {"__serialize", dec_tostring},
+  {"__deserialize", dec_new},
+  {"__gc", dec_gc},
   {NULL, NULL}
 };
 
 
 static void createmeta (lua_State *L) {
-  luaL_newmetatable(L, LUA_NUMBERHANDLE);  /* create metatable for thread handles */
+  luaL_newmetatable(L, LUA_DECIMALHANDLE);  /* create metatable for thread handles */
   lua_pushvalue(L, -1);  /* push metatable */
   lua_setfield(L, -2, "__index");  /* metatable.__index = metatable */
-  luaL_setfuncs(L, nlib, 0);  /* add file methods to new metatable */
+  luaL_setfuncs(L, dec_methods, 0);  /* add file methods to new metatable */
   lua_pop(L, 1);  /* pop new metatable */
 }
 
 
-static int n_call (lua_State *L) {
+static int dec_call (lua_State *L) {
   int convidx;
-  todecimal(L, 2, &convidx);
-  if (!convidx)
-    lua_pushvalue(L, 2);
+  lua_remove(L, 1);
+  luaL_checkany(L, 1);
+  DecimalState *ds = todecimal(L, 1, &convidx);
+  if (!convidx) {
+    DecimalState *r = create(L);
+    uint32_t status = 0;
+    mpd_qcopy(&r->v, &ds->v, &status);
+    dec_addstatus(L, status);
+  }
   return 1;
 }
 
 
-static const luaL_Reg mtlib[] = {
-  {"__call", n_call},
+static const luaL_Reg dec_mt[] = {
+  {"__call", dec_call},
   {NULL, NULL}
 };
 
 
-/*static void dec_traphandler(mpd_context_t *ctx) {
+static void dec_traphandler(mpd_context_t *ctx) {
   (void) ctx;
-}*/
+}
 
 #define DEC_DFLT_EMAX 999999
 #define DEC_DFLT_EMIN -999999
@@ -322,8 +353,8 @@ static mpd_context_t dflt_ctx = {
 };
 
 
-LUAMOD_API int luaopen_number (lua_State *L) {
-  /*if (!initialized) {
+LUAMOD_API int luaopen_decimal (lua_State *L) {
+  if (!initialized) {
     mpd_traphandler = dec_traphandler;
     mpd_mallocfunc = malloc;
     mpd_reallocfunc = realloc;
@@ -331,15 +362,16 @@ LUAMOD_API int luaopen_number (lua_State *L) {
     mpd_free = free;
     mpd_setminalloc(DEC_MINALLOC);
     initialized = 1;
-  }*/
-  mpd_maxcontext(&L->mpd_ctx);
+  }
+  L->mpd_ctx = dflt_ctx;
+  /*mpd_maxcontext(&L->mpd_ctx);*/
   /* register mpdec library */
-  luaL_newlib(L, numberlib);  /* new module */
-  luaL_newlib(L, mtlib);
+  luaL_newlib(L, dec_lib);  /* new module */
+  luaL_newlib(L, dec_mt);
   lua_setmetatable(L, -2);
   createmeta(L);
   /* register PI constant */
-  lua_pushcfunction(L, n_new);
+  lua_pushcfunction(L, dec_new);
   lua_pushstring(L, "3.141592653589793238462643383279502884");
   lua_call(L, 1, 1);
   lua_setfield(L, -2, "PI");

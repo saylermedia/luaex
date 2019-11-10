@@ -54,7 +54,7 @@ static const luaL_Reg loadedlibs[] = {
   {LUA_THREADLIBNAME, luaopen_thread},
 #endif
 #ifdef LUAEX_MPDECIMAL
-  {LUA_NUMBERLIBNAME, luaopen_number},
+  {LUA_DECIMALLIBNAME, luaopen_decimal},
 #endif
 #if defined(LUA_COMPAT_BITLIB)
   {LUA_BITLIBNAME, luaopen_bit32},

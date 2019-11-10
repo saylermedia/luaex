@@ -1,9 +1,9 @@
--- Lua Extreme example: Use big numbers
+-- Lua Extreme example: Use big numbers (Decimal floating point arithmetic library)
 -- See Agreement in LICENSE
 -- Copyright (C) 2019, Alexey Smirnov <saylermedia@gmail.com>
 --
 -- how to use:
-  -- number(...)
+  -- decimal(...)
   -- methods:
     -- abs()
     -- floor()
@@ -12,7 +12,7 @@
     -- round(x)
   
 -- for example:
-  -- local n = number("44.54353463465346346346876894768947689347634975837498578394")
+  -- local n = decimal("44.54353463465346346346876894768947689347634975837498578394")
 	-- print(n)
   -- print(n:floor())
 	-- print(n:ceil())
@@ -25,7 +25,7 @@ local function fac(x)
 end
 
 local function facx(x)
-  local n = number(x)
+  local n = decimal(x)
   return fac(x), fac(n)
 end
 
@@ -40,7 +40,7 @@ for i = 1, 50 do
   print(i, p[i]:join())
 end
 
-local a = number(33.58)
+local a = decimal(33.58)
 print('a = ', a)
 print('a == 33', a == 33)
 print('a == 33.8', a == 33.58)
@@ -49,5 +49,5 @@ print('a >= 33.8', a >= 33.58)
 
 print('round = ', a:round(1))
 
-print('1 << 5', number(1) << 5)
-print('prev >> 5', (number(1) << 5) >> 5)
+print('1 << 5', decimal(1) << 5)
+print('prev >> 5', (decimal(1) << 5) >> 5)

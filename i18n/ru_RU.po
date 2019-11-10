@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2019-11-09 05:50+0300\n"
-"PO-Revision-Date: 2019-11-09 06:30+0300\n"
+"POT-Creation-Date: 2019-11-10 10:39+0300\n"
+"PO-Revision-Date: 2019-11-10 10:42+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: ru_RU\n"
@@ -318,6 +318,56 @@ msgstr "попытка сравнить два значения %s"
 msgid "attempt to compare %s with %s"
 msgstr "попытка сравнить %s с %s"
 
+#: ldeclib.c:41 ldeclib.c:193 ldeclib.c:216 ldeclib.c:256 lthreadlib.c:202
+#: lthreadlib.c:248
+msgid "not enough memory"
+msgstr "недостаточно памяти"
+
+#: ldeclib.c:45
+msgid "IEEE invalide operation"
+msgstr "IEEE недопустимая  операция"
+
+#: ldeclib.c:47
+msgid "division by zero"
+msgstr "деление на нуль"
+
+#: ldeclib.c:49
+msgid "overflow"
+msgstr "переполнение"
+
+#: ldeclib.c:51
+msgid "underflow"
+msgstr "потеря значимости"
+
+#: ldeclib.c:53
+msgid "subnormal"
+msgstr "ниже нормального"
+
+#: ldeclib.c:55
+msgid "inexact"
+msgstr "неточный"
+
+#: ldeclib.c:57
+msgid "rounded"
+msgstr "округленный"
+
+#: ldeclib.c:59
+msgid "clamped"
+msgstr "фиксированный"
+
+#: ldeclib.c:61
+msgid "operation failed"
+msgstr "ошибка выполнения"
+
+#: ldeclib.c:96
+msgid "cannot convert value to decimal"
+msgstr "невозможно привести значение к decimal"
+
+#: ldeclib.c:100
+#, c-format
+msgid "cannot convert type %s to decimal"
+msgstr "невозможно привести тип %s к decimal"
+
 #: ldo.c:483
 msgid "C stack overflow"
 msgstr "переполнение стека C"
@@ -481,27 +531,6 @@ msgstr "слишком много %s (ограниченно %d)"
 #: lmem.c:69
 msgid "memory allocation error: block too big"
 msgstr "ошибка распределения памяти: слишком большой блок"
-
-#: lmpdeclib.c:41 lmpdeclib.c:170 lmpdeclib.c:193 lmpdeclib.c:231
-#: lthreadlib.c:202 lthreadlib.c:248
-msgid "not enough memory"
-msgstr "недостаточно памяти"
-
-#: lmpdeclib.c:45
-msgid "IEEE invalide operation"
-msgstr "IEEE недопустимая  операция"
-
-#: lmpdeclib.c:49
-msgid "division by zero"
-msgstr "деление на нуль"
-
-#: lmpdeclib.c:53
-msgid "overflow"
-msgstr "переполнение"
-
-#: lmpdeclib.c:57
-msgid "underflow"
-msgstr "потеря значимости"
 
 #: loadlib.c:174
 msgid "unable to get ModuleFileName"
@@ -683,7 +712,7 @@ msgstr "ожидается функция"
 msgid "cannot serialize function"
 msgstr "невозможно сериализировать функцию"
 
-#: lserialize.c:179
+#: lserialize.c:180
 #, c-format
 msgid "cannot serialize %s"
 msgstr "невозможно сериализировать %s"
@@ -693,15 +722,15 @@ msgstr "невозможно сериализировать %s"
 msgid "serialized data malformed, expected '%s'"
 msgstr "сериализированные данные неккоректны, ожидается '%s'"
 
-#: lserialize.c:217
+#: lserialize.c:213
 msgid "serialized data break"
 msgstr "сериализированное повреждение данных"
 
-#: lserialize.c:254
+#: lserialize.c:250
 msgid "0 or 1"
 msgstr "0 или 1"
 
-#: lserialize.c:387
+#: lserialize.c:383
 #, c-format
 msgid "type '%c' malformed"
 msgstr "тип '%c' некорректен"

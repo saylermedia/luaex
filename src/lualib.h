@@ -53,8 +53,8 @@ LUAMOD_API int (luaopen_thread) (lua_State *L);
 #endif
 
 #ifdef LUAEX_MPDECIMAL
-#define LUA_NUMBERLIBNAME "number"
-LUAMOD_API int (luaopen_number) (lua_State *L);
+#define LUA_DECIMALLIBNAME "decimal"
+LUAMOD_API int (luaopen_decimal) (lua_State *L);
 #endif
 
 /* open all previous libraries */
