@@ -6,6 +6,7 @@ cmake_minimum_required(VERSION 3.4.1)
 set(SOURCES basearith.c context.c constants.c convolute.c crt.c
   mpdecimal.c mpsignal.c difradix2.c fnt.c fourstep.c
   io.c memory.c numbertheory.c sixstep.c transpose.c)
+set_source_files_properties(${SOURCES} PROPERTIES C_STANDARD 99)
   
 math(EXPR CPU_CAPACITY "${CMAKE_SIZEOF_VOID_P} * 8")
 message(STATUS "CPU Capacity: ${CPU_CAPACITY}")
