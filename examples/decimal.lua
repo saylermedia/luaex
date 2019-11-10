@@ -51,3 +51,8 @@ print('round = ', a:round(1))
 
 print('1 << 5', decimal(1) << 5)
 print('prev >> 5', (decimal(1) << 5) >> 5)
+
+print('decimal.fma(3, 2, 5) =', decimal.fma(3, 2, 5))
+
+
+
