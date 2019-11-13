@@ -32,12 +32,17 @@ endif()
 
 # GNU Compiler or Clang
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
-  add_definitions(-Wall -Wextra)
+  add_definitions(-Wall -Wextra -fPIC)
   
   if(STRIP_EXECUTABLES)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -s")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s")
   endif()
+  
+  #if(BUILD_STATIC_CRT)
+  #  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static")
+  #  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
+  #endif()
   
 # Microsoft Visual C++
 elseif(MSVC)

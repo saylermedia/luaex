@@ -217,7 +217,8 @@ struct lua_State {
   volatile int canceled; /* cancel execution (native thread destructor) */
 #endif
 #ifdef LUAEX_MPDECIMAL
-  mpd_context_t mpd_ctx; /* mpdecimal context */
+  mpd_context_t decctx;		/* default mpdecimal context */
+  mpd_context_t maxdecctx;	/* max mpdecimal context */
 #endif
 };
 

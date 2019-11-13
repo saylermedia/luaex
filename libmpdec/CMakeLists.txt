@@ -23,8 +23,7 @@ add_library(mpdec STATIC ${SOURCES})
 if(MSVC)
   target_compile_definitions(mpdec PUBLIC "CONFIG_${CPU_CAPACITY}" PPRO MASM)
 else()
-  target_compile_definitions(mpdec PUBLIC "CONFIG_${CPU_CAPACITY}" PPRO ASM)
+  target_compile_definitions(mpdec PUBLIC "CONFIG_${CPU_CAPACITY}" ANSI)
 endif()
 
 target_include_directories(mpdec PUBLIC ${CMAKE_CURRENT_BINARY_DIR} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
-
