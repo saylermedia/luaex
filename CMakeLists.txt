@@ -2,7 +2,7 @@
 # Copyright (C) 2019, Alexey Smirnov <saylermedia@gmail.com>
 
 cmake_minimum_required(VERSION 3.4.1)
-project(luaex)
+project(exlua)
 
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(BUILD_EXECUTABLES "Build executables (lua, luac & etc)" ON)
@@ -119,7 +119,7 @@ if(NOT WIN32)
 endif()
 
 if(LUAEX_I18N)
-  install(DIRECTORY i18n DESTINATION share FILES_MATCHING PATTERN "*.mo")
+  install(DIRECTORY locale DESTINATION share FILES_MATCHING PATTERN "*.mo")
 endif()
 
 configure_file("LICENSE" "LICENSE.txt" COPYONLY)
@@ -150,6 +150,6 @@ if(BUILD_EXECUTABLES)
   file(GLOB _FILES ${CMAKE_SOURCE_DIR}/examples/*.lua)
   foreach(_FILE ${_FILES})
     get_filename_component(_NAME "${_FILE}" NAME)
-    add_test(NAME ${_NAME} COMMAND $<TARGET_FILE:lua> ${_FILE} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/examples)
+    add_test(NAME ${_NAME} COMMAND $<TARGET_FILE:exlua> ${_FILE} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/examples)
   endforeach()
 endif()

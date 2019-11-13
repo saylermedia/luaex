@@ -33,41 +33,36 @@ static uint32_t ldata, ndata;
 static uint32_t *ostring, *tstring;
 
 
-LUA_API int lua_lopen (const char *locale) {
+LUA_API int lua_lopen (const char *lang) {
   lua_lclose();
   char buf[MAX_PATH];
   FILE *file;
-  if (locale) {
-    snprintf(buf, sizeof(buf), "../share/i18n/%s.mo", locale);
-    file = fopen(buf, "rb");
-  } else {
+  if (lang)
+    snprintf(buf, sizeof(buf), "../share/locale/%s/LC_MESSAGES/exlua.mo", lang);
+  else {
   #ifdef _WIN32
     char lbuf[8];
-    char cbuf[12];
+    /*char cbuf[12];*/
     LCID lcid = GetUserDefaultLCID();
     GetLocaleInfo(lcid, LOCALE_SISO639LANGNAME, lbuf, sizeof(lbuf));
-    GetLocaleInfo(lcid, LOCALE_SISO3166CTRYNAME, cbuf, sizeof(cbuf));
-    snprintf(buf, sizeof(buf), "../share/i18n/%s_%s.mo", lbuf, cbuf);
-    file = fopen(buf, "rb");
-    if (file == NULL) {
-      snprintf(buf, sizeof(buf), "../share/i18n/%s.mo", lbuf);
-      file = fopen(buf, "rb");
-    }
+    /*GetLocaleInfo(lcid, LOCALE_SISO3166CTRYNAME, cbuf, sizeof(cbuf));*/
+    snprintf(buf, sizeof(buf), "../share/locale/%s/LC_MESSAGES/exlua.mo", lbuf);
   #else
     return 0;
   #endif
   }
+  file = fopen(buf, "rb");
   if (file) {
     uint32_t value;
     fread(&value, sizeof(uint32_t), 1, file);
-    if (value == 0x950412de) { /* magic signature must be 0x950412de */
+    if (value == 0x950412de) {  /* magic signature must be 0x950412de */
       fread(&value, sizeof(uint32_t), 1, file);
-      if (value == 0) { /* format must be 0 */
+      if (value == 0) {         /* format must be 0 */
         fread(&ndata, sizeof(uint32_t), 1, file);
-        if (ndata > 0) { /* number of strings must be > 0 */
+        if (ndata > 0) {        /* number of strings must be > 0 */
           uint32_t os, ts;
-          fread(&os, sizeof(uint32_t), 1, file);  /* offset of table with original strings */
-          fread(&ts, sizeof(uint32_t), 1, file);  /* offset of table with translation strings */
+          fread(&os, sizeof(uint32_t), 1, file); /* offset of table with original strings */
+          fread(&ts, sizeof(uint32_t), 1, file); /* offset of table with translation strings */
           if (os >= 28 && ts >= 28) {
             fseek(file, 0, SEEK_END);
             ldata = (uint32_t) ftell(file);

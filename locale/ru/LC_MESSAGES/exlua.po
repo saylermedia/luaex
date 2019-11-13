@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2019-11-10 10:39+0300\n"
-"PO-Revision-Date: 2019-11-10 10:42+0300\n"
+"POT-Creation-Date: 2019-11-13 08:12+0300\n"
+"PO-Revision-Date: 2019-11-13 08:14+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: ru_RU\n"
@@ -10,7 +10,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 2.2.3\n"
-"X-Poedit-Basepath: ../src\n"
+"X-Poedit-Basepath: ../../../src\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
 "X-Poedit-SourceCharset: UTF-8\n"
@@ -318,55 +318,83 @@ msgstr "попытка сравнить два значения %s"
 msgid "attempt to compare %s with %s"
 msgstr "попытка сравнить %s с %s"
 
-#: ldeclib.c:41 ldeclib.c:193 ldeclib.c:216 ldeclib.c:256 lthreadlib.c:202
-#: lthreadlib.c:248
+#: ldeclib.c:53 ldeclib.c:433 lthreadlib.c:202 lthreadlib.c:248
 msgid "not enough memory"
 msgstr "недостаточно памяти"
 
-#: ldeclib.c:45
+#: ldeclib.c:57
 msgid "IEEE invalide operation"
-msgstr "IEEE недопустимая  операция"
+msgstr "недопустимая операция"
 
-#: ldeclib.c:47
+#: ldeclib.c:59
 msgid "division by zero"
 msgstr "деление на нуль"
 
-#: ldeclib.c:49
+#: ldeclib.c:61
 msgid "overflow"
 msgstr "переполнение"
 
-#: ldeclib.c:51
+#: ldeclib.c:63
 msgid "underflow"
 msgstr "потеря значимости"
 
-#: ldeclib.c:53
+#: ldeclib.c:65
 msgid "subnormal"
 msgstr "ниже нормального"
 
-#: ldeclib.c:55
+#: ldeclib.c:67
 msgid "inexact"
 msgstr "неточный"
 
-#: ldeclib.c:57
+#: ldeclib.c:69
 msgid "rounded"
 msgstr "округленный"
 
-#: ldeclib.c:59
+#: ldeclib.c:71
 msgid "clamped"
 msgstr "фиксированный"
 
-#: ldeclib.c:61
+#: ldeclib.c:73
 msgid "operation failed"
 msgstr "ошибка выполнения"
 
-#: ldeclib.c:96
+#: ldeclib.c:105
 msgid "cannot convert value to decimal"
 msgstr "невозможно привести значение к decimal"
 
-#: ldeclib.c:100
+#: ldeclib.c:109
 #, c-format
 msgid "cannot convert type %s to decimal"
 msgstr "невозможно привести тип %s к decimal"
+
+#: ldeclib.c:202
+#| msgid "<name> or '...' expected"
+msgid "<name> expected (string)"
+msgstr "ожидается <имя> (строка)"
+
+#: ldeclib.c:204
+msgid "<value> expected (string or number)"
+msgstr "ожидается <значение> (строка или число)"
+
+#: ldeclib.c:213
+#, c-format
+#| msgid "unrecognized option '%s'\n"
+msgid "unknown option '%s'"
+msgstr "неизвестная опция '%s'"
+
+#: ldeclib.c:230
+#, c-format
+#| msgid "too many arguments"
+msgid "unknown argument '%s'"
+msgstr "неизвестный аргумент '%s'"
+
+#: ldeclib.c:232
+msgid "string or table expected"
+msgstr "ожидается строка или таблица"
+
+#: ldeclib.c:374 ldeclib.c:376 ldeclib.c:396 ldeclib.c:398
+msgid "expected integer value"
+msgstr "ожидается целое число"
 
 #: ldo.c:483
 msgid "C stack overflow"

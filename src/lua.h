@@ -463,7 +463,7 @@ struct lua_Debug {
 */
 
 #ifdef LUAEX_I18N
-LUA_API int (lua_lopen) (const char *locale);
+LUA_API int (lua_lopen) (const char *lang);
 LUA_API void (lua_lclose) (void);
 LUA_API const char * (lua_gettext) (const char *s);
 #define _(x) lua_gettext(x)
