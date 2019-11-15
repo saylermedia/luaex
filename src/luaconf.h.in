@@ -794,6 +794,8 @@
 #cmakedefine LUAEX_THREADLIB
 #cmakedefine LUAEX_MPDECIMAL
 #cmakedefine LUAEX_I18N
+#cmakedefine LUAEX_SOCKET
+#cmakedefine LUAEX_BYTE
 
 #endif
 

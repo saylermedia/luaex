@@ -542,13 +542,6 @@ static const luaL_Reg dec_mt[] = {
 };
 
 
-/*static int decctx_tostring (lua_State *L) {
-  mpd_context_t *ctx = (mpd_context_t *) luaL_checkudata(L, 1, LUA_DECCTXHANDLE);
-  lua_pushfstring(L, "{prec=%d,emax=%d,emin=%d}", ctx->prec, ctx->emax, ctx->emin);
-  return 1;
-}*/
-
-
 static void dec_traphandler(mpd_context_t *ctx) {
   (void) ctx;
 }

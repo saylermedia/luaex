@@ -491,6 +491,11 @@ LUA_API int (lua_deserialize) (lua_State *L, int idx);
 LUA_API void (lua_cancel) (lua_State *L);
 #endif
 
+#ifdef LUAEX_BYTE
+/* get data buffer & size of byte */
+LUA_API unsigned char *(lua_byte) (lua_State *L, int idx, size_t *l);
+#endif
+
 
 /* }====================================================================== */
 

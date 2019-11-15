@@ -57,6 +57,16 @@ LUAMOD_API int (luaopen_thread) (lua_State *L);
 LUAMOD_API int (luaopen_decimal) (lua_State *L);
 #endif
 
+#ifdef LUAEX_SOCKET
+#define LUAEX_SOCKETLIBNAME "socket"
+LUAMOD_API int (luaopen_socket) (lua_State *L);
+#endif
+
+#ifdef LUAEX_BYTE
+#define LUAEX_BYTELIBNAME "byte"
+LUAMOD_API int (luaopen_byte) (lua_State *L);
+#endif
+
 /* open all previous libraries */
 LUALIB_API void (luaL_openlibs) (lua_State *L);
 

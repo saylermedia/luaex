@@ -7,7 +7,7 @@ set(SOURCES lapi.c lcode.c lctype.c ldebug.c ldo.c ldump.c lfunc.c lgc.c
   llex.c lmem.c lobject.c lopcodes.c lparser.c lstate.c lstring.c ltable.c ltm.c
   lundump.c lvm.c lzio.c lauxlib.c lbaselib.c lbitlib.c lcorolib.c ldblib.c liolib.c
   lmathlib.c loslib.c lstrlib.c ltablib.c lutf8lib.c loadlib.c linit.c
-  lserialize.c lthreadlib.c ldeclib.c lgettext.c)
+  lserialize.c lthreadlib.c ldeclib.c lgettext.c lsocklib.c lbytelib.c)
 
 set_source_files_properties(${SOURCES} lua.c luac.c PROPERTIES C_STANDARD 99)
 configure_file("luaconf.h.in" "luaconf.h")
@@ -30,7 +30,11 @@ else()
   declare_static("exlua")
 endif()
 
-if(NOT WIN32)
+if(WIN32)
+  if(LUAEX_SOCKET)
+    list(APPEND LUA_LIBS wsock32.lib ws2_32.lib iphlpapi.lib)
+  endif()
+else()
   list(APPEND LUA_LIBS m)
   if(LUAEX_THREADLIB)
     list(APPEND LUA_LIBS pthread)
