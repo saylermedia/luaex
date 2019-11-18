@@ -4,6 +4,37 @@
 cmake_minimum_required(VERSION 3.4.1)
 project(exlua)
 
+# external libraries
+find_package(ZLIB)
+find_package(OpenSSL)
+
+# check configuration
+include(CheckIncludeFile)
+include(CheckIncludeFileCXX)
+include(CheckFunctionExists)
+include(CheckTypeSize)
+
+check_include_file(dirent.h     HAVE_DIRENT_H)
+check_include_file(stdint.h     HAVE_STDINT_H)
+check_include_file(inttypes.h   HAVE_INTTYPES_H)
+check_include_file(sys/stat.h   HAVE_SYS_STAT_H)
+check_include_file(sys/types.h  HAVE_SYS_TYPES_H)
+check_include_file(unistd.h     HAVE_UNISTD_H)
+check_include_file(windows.h    HAVE_WINDOWS_H)
+
+check_include_file_cxx(type_traits.h            HAVE_TYPE_TRAITS_H)
+check_include_file_cxx(bits/type_traits.h       HAVE_BITS_TYPE_TRAITS_H)
+
+check_function_exists(bcopy     HAVE_BCOPY)
+check_function_exists(memmove   HAVE_MEMMOVE)
+check_function_exists(strerror  HAVE_STRERROR)
+check_function_exists(strtoll   HAVE_STRTOLL)
+check_function_exists(strtoq    HAVE_STRTOQ)
+check_function_exists(_strtoi64 HAVE__STRTOI64)
+
+check_type_size("long long"             LONG_LONG)
+check_type_size("unsigned long long"    UNSIGNED_LONG_LONG)
+
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(BUILD_EXECUTABLES "Build executables (lua, luac & etc)" ON)
 option(STRIP_EXECUTABLES "Strip executables and shared libraries" ON)
@@ -18,6 +49,7 @@ option(LUAEX_MPDECIMAL "Enable decimal floating point arithmetic" ON)
 option(LUAEX_I18N "Enable i18n for messages" ON)
 option(LUAEX_SOCKET "Enable socket library" ON)
 option(LUAEX_BYTE "Enable byte library" ON)
+option(LUAEX_PCRE "Enable Perl-Compatible Regular Expressions library" ON)
 
 if(NOT LUAEX_BASE)
   set(LUAEX_TRYCATCH OFF)
@@ -28,6 +60,7 @@ if(NOT LUAEX_BASE)
   set(LUAEX_I18N OFF)
   set(LUAEX_SOCKET OFF)
   set(LUAEX_BYTE OFF)
+  set(LUAEX_PCRE OFF)
 endif()
 
 if(NOT LUAEX_SERIALIZE)
@@ -42,17 +75,10 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -s")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s")
   endif()
-  
-  #if(BUILD_STATIC_CRT)
-  #  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static")
-  #  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
-  #endif()
-  
 # Microsoft Visual C++
 elseif(MSVC)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS)
-  #add_definitions(/WX)
-  
+  # don't generate manifest files
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /MANIFEST:NO")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO")
@@ -76,28 +102,6 @@ if(WIN32)
   set(CMAKE_SHARED_LIBRARY_PREFIX "")
 endif()
 
-set_property(GLOBAL PROPERTY PROJECT_SHARED_LIBS "")
-set_property(GLOBAL PROPERTY PROJECT_STATIC_LIBS "")
-set_property(GLOBAL PROPERTY PROJECT_EXECUTABLES "")
-
-macro (declare_shared name)
-  get_property(_tmp GLOBAL PROPERTY PROJECT_SHARED_LIBS)
-  set(_tmp "${_tmp} ${CMAKE_SHARED_LIBRARY_PREFIX}${name}${CMAKE_SHARED_LIBRARY_SUFFIX}")
-  set_property(GLOBAL PROPERTY PROJECT_SHARED_LIBS "${_tmp}")
-endmacro()
-
-macro (declare_static name)
-  get_property(_tmp GLOBAL PROPERTY PROJECT_STATIC_LIBS)
-  set(_tmp "${_tmp} ${CMAKE_STATIC_LIBRARY_PREFIX}${name}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  set_property(GLOBAL PROPERTY PROJECT_STATIC_LIBS "${_tmp}")
-endmacro()
-
-macro (declare_executable name)
-  get_property(_tmp GLOBAL PROPERTY PROJECT_EXECUTABLES)
-  set(_tmp "${_tmp} ${name}${CMAKE_EXECUTABLE_SUFFIX}")
-  set_property(GLOBAL PROPERTY PROJECT_EXECUTABLES "${_tmp}")
-endmacro()
-
 message(STATUS "Compiler ID: " ${CMAKE_C_COMPILER_ID})
 message(STATUS "Install to: " ${CMAKE_INSTALL_PREFIX})
 
@@ -107,16 +111,10 @@ set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 if(LUAEX_MPDECIMAL)
   add_subdirectory(libmpdec)
 endif()
-
+if(LUAEX_PCRE)
+  add_subdirectory(pcre)
+endif()
 add_subdirectory(src)
-
-get_property(_shared GLOBAL PROPERTY PROJECT_SHARED_LIBS)
-get_property(_static GLOBAL PROPERTY PROJECT_STATIC_LIBS)
-get_property(_executables GLOBAL PROPERTY PROJECT_EXECUTABLES)
-
-message(STATUS "Shared libraries:" ${_shared})
-message(STATUS "Static libraries:" ${_static})
-message(STATUS "Executables:" ${_executables})
 
 if(NOT WIN32)
   install(FILES doc/lua.1 doc/luac.1 DESTINATION share/man/man1)

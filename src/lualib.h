@@ -67,6 +67,11 @@ LUAMOD_API int (luaopen_socket) (lua_State *L);
 LUAMOD_API int (luaopen_byte) (lua_State *L);
 #endif
 
+#ifdef LUAEX_PCRE
+#define LUAEX_RELIBNAME "re"
+LUAMOD_API int (luaopen_re) (lua_State *L);
+#endif
+
 /* open all previous libraries */
 LUALIB_API void (luaL_openlibs) (lua_State *L);
 

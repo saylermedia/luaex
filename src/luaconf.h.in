@@ -796,6 +796,7 @@
 #cmakedefine LUAEX_I18N
 #cmakedefine LUAEX_SOCKET
 #cmakedefine LUAEX_BYTE
+#cmakedefine LUAEX_PCRE
 
 #endif
 
