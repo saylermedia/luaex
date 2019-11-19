@@ -161,7 +161,8 @@ static const luaL_Reg zlib_lib[] =
 };
 
 
-LUAMOD_API int luaopen_zlib (lua_State *L) {
+LUAMOD_API int luaopen_zlib (lua_State *L)
+{
   /* register library */
   luaL_newlib(L, zlib_lib);  /* new module */
   
