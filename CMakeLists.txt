@@ -15,6 +15,7 @@ message(STATUS "Perl: " ${PERL_PATH})
 # check configuration
 include(CheckIncludeFile)
 include(CheckIncludeFileCXX)
+include(CheckSymbolExists)
 include(CheckFunctionExists)
 include(CheckTypeSize)
 
@@ -25,6 +26,7 @@ check_include_file(sys/stat.h   HAVE_SYS_STAT_H)
 check_include_file(sys/types.h  HAVE_SYS_TYPES_H)
 check_include_file(unistd.h     HAVE_UNISTD_H)
 check_include_file(windows.h    HAVE_WINDOWS_H)
+check_include_file(linux/wireless.h HAVE_WIRELESS_H)
 
 check_include_file_cxx(type_traits.h            HAVE_TYPE_TRAITS_H)
 check_include_file_cxx(bits/type_traits.h       HAVE_BITS_TYPE_TRAITS_H)

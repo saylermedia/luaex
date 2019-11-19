@@ -27,6 +27,7 @@
 #include <winsock2.h>
 #include <windows.h>
 #include <ws2tcpip.h>
+#include <iphlpapi.h>
 #define close closesocket
 #define bzero RtlZeroMemory
 #define LPBUFFER char *
@@ -46,6 +47,10 @@
 #include <sys/select.h>
 #include <sys/ioctl.h>
 #include <libgen.h>
+#include <net/if.h>
+#ifdef HAVE_WIRELESS_H
+#include <linux/wireless.h>
+#endif
 #include <errno.h>
 #ifndef errno
 extern int errno;
@@ -131,6 +136,207 @@ static const char * sock_strerror (int errcode)
   }
 }
 #endif
+
+
+static struct sock_context * create (lua_State *L, int type, int inet, int subnet)
+{
+  struct sock_context *ctx = (struct sock_context *) lua_newuserdata(L, sizeof(struct sock_context));
+
+  ctx->type = type;
+  ctx->handle = socket(inet, subnet, 0);
+  if (ctx->handle < 0)
+    luaL_error(L, _("socket() failed, %s (%d)"), sock_strerror(sock_errno), sock_errno);
+  
+  luaL_setmetatable(L, LUA_SOCKETHANDLE);
+  return ctx;
+}
+
+
+static int sock_ifr (lua_State *L)
+{
+  char buf[32];
+#ifdef _WIN32
+  PIP_ADAPTER_ADDRESSES	addresses = NULL;
+  PIP_ADAPTER_ADDRESSES	adapter;
+  ULONG	size = 0;
+  const ULONG flags =
+    GAA_FLAG_SKIP_ANYCAST
+    | GAA_FLAG_SKIP_MULTICAST
+    | GAA_FLAG_SKIP_DNS_SERVER
+    | GAA_FLAG_INCLUDE_PREFIX
+    | GAA_FLAG_INCLUDE_GATEWAYS;
+  
+  for (;;)
+  {
+    ULONG retVal = GetAdaptersAddresses(AF_INET, flags, NULL, addresses, &size);
+    if (retVal == ERROR_BUFFER_OVERFLOW)
+    {
+      if (addresses)
+        lua_pop(L, 1);
+      addresses = (PIP_ADAPTER_ADDRESSES) lua_newuserdata(L, size);
+    }
+    else
+    {
+      if (retVal != NO_ERROR)
+      {
+        if (addresses)
+        {
+          free(addresses);
+          luaL_error(L, _("cannot list network interfaces"));
+        }
+      }
+      break;
+    }
+  }
+  lua_newtable(L);
+  for (adapter = addresses; adapter; adapter = adapter->Next)
+  {
+    lua_pushstring(L, adapter->AdapterName);
+    lua_newtable(L);
+    
+    snprintf(buf, sizeof(buf), "%lu.%lu.%lu.%lu",
+      (long unsigned int)((unsigned char *) &adapter->FirstUnicastAddress->Address.lpSockaddr->sa_data)[2],
+      (long unsigned int)((unsigned char *) &adapter->FirstUnicastAddress->Address.lpSockaddr->sa_data)[3],
+      (long unsigned int)((unsigned char *) &adapter->FirstUnicastAddress->Address.lpSockaddr->sa_data)[4],
+      (long unsigned int)((unsigned char *) &adapter->FirstUnicastAddress->Address.lpSockaddr->sa_data)[5]);
+    
+    lua_pushstring(L, "addr"); 
+    lua_pushstring(L, buf);
+    lua_rawset(L, -3);
+
+    snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X",
+      adapter->PhysicalAddress[0], adapter->PhysicalAddress[1],
+      adapter->PhysicalAddress[2], adapter->PhysicalAddress[3],
+      adapter->PhysicalAddress[4], adapter->PhysicalAddress[5]);
+    
+    lua_pushstring(L, "hwaddr"); 
+    lua_pushstring(L, buf);
+    lua_rawset(L, -3);
+    
+    lua_pushstring(L, "mask");
+    lua_pushinteger(L, adapter->FirstUnicastAddress->OnLinkPrefixLength);
+    lua_rawset(L, -3);
+    
+    lua_pushstring(L, "loopback");
+    lua_pushboolean(L, adapter->IfType == IF_TYPE_SOFTWARE_LOOPBACK);
+    lua_rawset(L, -3);
+    
+    lua_pushstring(L, "connected");
+    lua_pushboolean(L, adapter->OperStatus == IfOperStatusUp);
+    lua_rawset(L, -3);
+    
+    lua_pushstring(L, "wireless");
+    lua_pushboolean(L, adapter->IfType == IF_TYPE_IEEE80211);
+    lua_rawset(L, -3);
+    
+    lua_rawset(L, -3);
+  }
+#else
+#define MAX_NETWORK_INTERFACES 16
+  struct sock_context *ctx = create(L, SOCKET_UDP, AF_INET, SOCK_DGRAM);
+  
+  struct ifreq	ifs[MAX_NETWORK_INTERFACES];
+  struct ifconf ifc;
+  
+  ifc.ifc_len = sizeof(ifs);
+  ifc.ifc_req = ifs;
+  
+  if (ioctl(ctx->handle, SIOCGIFCONF, &ifc) < 0)
+    luaL_error(L, _("ioctl() SIOCGIFCONF failed, errno = %s (%d)"), sock_strerror(sock_errno), sock_errno);
+
+  struct ifreq *ifr = ifc.ifc_req;
+	struct ifreq *ifend = ifs + (ifc.ifc_len / sizeof(struct ifreq));
+	
+  lua_newtable(L);
+  for (; ifr < ifend; ifr++)
+  {
+    lua_pushstring(L, ifr->ifr_name);
+    lua_newtable(L);
+    
+    snprintf(buf, sizeof(buf), "%lu.%lu.%lu.%lu",
+      (long unsigned int)((unsigned char *) &ifr->ifr_addr.sa_data)[2],
+      (long unsigned int)((unsigned char *) &ifr->ifr_addr.sa_data)[3],
+      (long unsigned int)((unsigned char *) &ifr->ifr_addr.sa_data)[4],
+      (long unsigned int)((unsigned char *) &ifr->ifr_addr.sa_data)[5]);
+    
+    lua_pushstring(L, "addr");
+    lua_pushstring(L, buf);
+    lua_rawset(L, -3);
+    
+    struct ifreq ifreq;
+    strncpy(ifreq.ifr_name, ifr->ifr_name, sizeof(ifreq.ifr_name));
+    
+    if (ioctl(ctx->handle, SIOCGIFHWADDR, &ifreq) == 0)
+    {
+      snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X",
+        (unsigned char) ifreq.ifr_addr.sa_data[0],
+        (unsigned char) ifreq.ifr_addr.sa_data[1],
+        (unsigned char) ifreq.ifr_addr.sa_data[2],
+        (unsigned char) ifreq.ifr_addr.sa_data[3],
+        (unsigned char) ifreq.ifr_addr.sa_data[4],
+        (unsigned char) ifreq.ifr_addr.sa_data[5]);
+        
+      lua_pushstring(L, "hwaddr");
+      lua_pushstring(L, buf);
+      lua_rawset(L, -3);
+    }
+    
+    strncpy(ifreq.ifr_name, ifr->ifr_name, sizeof(ifreq.ifr_name));
+    if (ioctl(ctx->handle, SIOCGIFNETMASK, &ifreq) == 0)
+    {
+      size_t i, mask = 0;
+      for (i = 2; i < 6; i++)
+      {
+        long unsigned int value = (long unsigned int)((unsigned char *) &ifreq.ifr_netmask.sa_data)[i];
+        if (value == 255)
+          mask += 8;
+        else
+        {
+          long unsigned int bit = 128;
+          int nbit;
+          for (nbit = 0; nbit < 8 && ((value & bit) == bit); nbit++)
+          {
+            mask++;
+            bit = bit >> 1;
+          }
+          break;
+        }
+      }
+      
+      lua_pushstring(L, "mask");
+      lua_pushinteger(L, mask);
+      lua_rawset(L, -3);
+    }
+    
+    long unsigned int a = (long unsigned int)((unsigned char *) &ifr->ifr_addr.sa_data)[2];
+    
+    lua_pushstring(L, "loopback");
+    lua_pushboolean(L, a == 127 || a == 0);
+    lua_rawset(L, -3);
+    
+    strncpy(ifreq.ifr_name, ifr->ifr_name, sizeof(ifreq.ifr_name));
+    if (ioctl(ctx->handle, SIOCGIFFLAGS, &ifreq) == 0)
+    {
+      lua_pushstring(L, "connected");
+      lua_pushboolean(L, (ifreq.ifr_flags & (IFF_UP | IFF_RUNNING)) == (IFF_UP | IFF_RUNNING));
+      lua_rawset(L, -3);
+    }
+
+   #ifdef HAVE_WIRELESS_H
+    struct iwreq iwreq;
+    strcpy(iwreq.ifr_name, ifr->ifr_name);
+    
+    lua_pushstring(L, "wireless");
+    lua_pushboolean(L, ioctl(ctx->handle, SIOCGIWNAME, &iwreq) == 0);
+    lua_rawset(L, -3);
+  #endif
+    
+    lua_rawset(L, -3);
+  }
+  
+#endif
+  return 1;
+}
 
 
 static int sock_tcp (lua_State *L)
@@ -305,6 +511,7 @@ static int sock_gc (lua_State *L)
 */
 static const luaL_Reg sock_lib[] =
 {
+  {"ifr", sock_ifr},
   {"tcp", sock_tcp},
   {"err", sock_err},
   {"strerr", sock_strerr},
