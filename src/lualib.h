@@ -72,6 +72,11 @@ LUAMOD_API int (luaopen_byte) (lua_State *L);
 LUAMOD_API int (luaopen_re) (lua_State *L);
 #endif
 
+#ifdef LUAEX_ZLIB
+#define LUAEX_ZLIBNAME "zlib"
+LUAMOD_API int (luaopen_zlib) (lua_State *L);
+#endif
+
 /* open all previous libraries */
 LUALIB_API void (luaL_openlibs) (lua_State *L);
 

@@ -798,6 +798,7 @@
 #cmakedefine LUAEX_SOCKET
 #cmakedefine LUAEX_BYTE
 #cmakedefine LUAEX_PCRE
+#cmakedefine LUAEX_ZLIB
 
 #cmakedefine @HAVE_WIRELESS_H@
 

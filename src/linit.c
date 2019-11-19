@@ -65,6 +65,9 @@ static const luaL_Reg loadedlibs[] = {
 #ifdef LUAEX_PCRE
   {LUAEX_RELIBNAME, luaopen_re},
 #endif
+#ifdef LUAEX_ZLIB
+  {LUAEX_ZLIBNAME, luaopen_zlib},
+#endif
 #if defined(LUA_COMPAT_BITLIB)
   {LUA_BITLIBNAME, luaopen_bit32},
 #endif

@@ -9,8 +9,8 @@ find_package(ZLIB)
 find_package(OpenSSL)
 #find_package(Perl)
 
-find_program(PERL_PATH Perl)
-message(STATUS "Perl: " ${PERL_PATH})
+#find_program(PERL_PATH Perl)
+#message(STATUS "Perl: " ${PERL_PATH})
 
 # check configuration
 include(CheckIncludeFile)
@@ -56,6 +56,7 @@ option(LUAEX_I18N "Enable i18n for messages" ON)
 option(LUAEX_SOCKET "Enable socket library" ON)
 option(LUAEX_BYTE "Enable byte library" ON)
 option(LUAEX_PCRE "Enable Perl-Compatible Regular Expressions library" ON)
+option(LUAEX_ZLIB "Enable Zlib library" ON)
 
 if(NOT LUAEX_BASE)
   set(LUAEX_TRYCATCH OFF)
@@ -67,6 +68,11 @@ if(NOT LUAEX_BASE)
   set(LUAEX_SOCKET OFF)
   set(LUAEX_BYTE OFF)
   set(LUAEX_PCRE OFF)
+  set(LUAEX_ZLIB OFF)
+endif()
+
+if(NOT ZLIB_FOUND)
+  set(LUAEX_ZLIB OFF)
 endif()
 
 if(NOT LUAEX_SERIALIZE)
