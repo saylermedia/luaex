@@ -7,6 +7,10 @@ project(exlua)
 # external libraries
 find_package(ZLIB)
 find_package(OpenSSL)
+#find_package(Perl)
+
+find_program(PERL_PATH Perl)
+message(STATUS "Perl: " ${PERL_PATH})
 
 # check configuration
 include(CheckIncludeFile)
