@@ -497,6 +497,50 @@ LUA_API unsigned char *(lua_byte) (lua_State *L, int idx, size_t *l);
 #endif
 
 
+#ifdef LUAEX_SOCKET
+struct socket_addr_t;
+struct socket_ifr_t;
+struct socket_t;
+
+LUA_API struct socket_addr_t * socket_addr (const char *hostname);
+LUA_API const char * socket_addr_name (struct socket_addr_t *ctx);
+LUA_API void socket_addr_free (struct socket_addr_t *ctx);
+
+LUA_API struct socket_addr_t *(lua_newsocket_addr) (lua_State *L, const char *hostname);
+
+
+/* enumerate network interfaces */
+LUA_API struct socket_ifr_t * socket_ifr_new (void);
+LUA_API void socket_ifr_free (struct socket_ifr_t *ctx);
+LUA_API void socket_ifr_rewind (struct socket_ifr_t *ctx); /* reset to begin */
+LUA_API int socket_ifr_next (struct socket_ifr_t *ctx); /* next interface */
+LUA_API const char * socket_ifr_name (struct socket_ifr_t *ctx); /* name */
+LUA_API const char * socket_ifr_addr (struct socket_ifr_t *ctx); /* ip address */
+LUA_API const char * socket_ifr_hwaddr (struct socket_ifr_t *ctx); /* MAC address */
+LUA_API size_t socket_ifr_bmask (struct socket_ifr_t *ctx); /* bitmask */
+LUA_API int socket_ifr_ispriv (struct socket_ifr_t *ctx); /* is private? */
+LUA_API int socket_ifr_isloop (struct socket_ifr_t *ctx); /* is loopback? */
+LUA_API int socket_ifr_isup (struct socket_ifr_t *ctx); /* is connected? */
+LUA_API int socket_ifr_iswir (struct socket_ifr_t *ctx); /* is wireless? */
+
+/* create 'socket_ifr' userdata and push to stack, warning: do not use socket_ifr_free */
+LUA_API struct socket_ifr_t *(lua_newsocket_ifr) (lua_State *L);
+
+#define SOCKET_TCP 0
+#define SOCKET_UDP 1
+
+LUA_API struct socket_t * socket_new (int type);
+LUA_API struct socket_t * socket_connect (const char *hostname, int port, int timeout);
+LUA_API struct socket_t * socket_bind (const char *ifaddr, int port, int max);
+LUA_API void socket_close (struct socket_t *ctx);
+
+LUA_API struct socket_t *(lua_newsocket) (lua_State *L);
+
+LUA_API struct socket_t * socket_multicast (int type);
+
+#endif
+
+
 /* }====================================================================== */
 
 
