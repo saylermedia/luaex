@@ -63,3 +63,13 @@ print('object', 'value')
 print(vec, vec.v)
 print(svec, svec.v)
 
+local tt = {}
+for i = 1, 1000 do
+  table.insert(tt, i)
+end
+print(#serialize(tt))
+
+print('success')
+
+
+
