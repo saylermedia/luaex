@@ -67,7 +67,9 @@ local tt = {}
 for i = 1, 1000 do
   table.insert(tt, i)
 end
-print(#serialize(tt))
+
+local s = serialize(tt)
+print(s, #s)
 
 print('success')
 
