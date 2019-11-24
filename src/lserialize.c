@@ -20,7 +20,7 @@
 
 #define GROW_POINTER 64
 
-struct StringBuilder {
+typedef struct {
   char *b;
   size_t size;
   size_t n;
@@ -28,38 +28,10 @@ struct StringBuilder {
   size_t psize;
   size_t pn;
   lua_State *L;
-};
+} StringBuilder;
 
 
-static int bgc (lua_State *L) {
-  struct StringBuilder *B = (struct StringBuilder *) lua_touserdata(L, 1);
-  if (B->b)
-    free(B->b);
-  if (B->p)
-    free(B->p);
-  return 0;
-}
-
-
-static struct StringBuilder * newbuilder (lua_State *L) {
-  struct StringBuilder *B = (struct StringBuilder *) lua_newuserdata(L, sizeof(struct StringBuilder));
-  B->b = NULL;
-  B->size = 0;
-  B->n = 0;
-  B->p = NULL;
-  B->psize = 0;
-  B->pn = 0;
-  B->L = L;
-  if (luaL_newmetatable(L, "StringBuilder")) {
-    lua_pushcfunction(L, bgc);
-    lua_setfield(L, -2, "__gc");
-  }
-  lua_setmetatable(L, -2);
-  return B;
-}
-
-
-static void b_grow (struct StringBuilder *B, size_t sz) {
+static void b_grow (StringBuilder *B, size_t sz) {
   if (B->size - B->n < sz) {
     size_t newsize = B->n + sz + LUAL_BUFFERSIZE;
     char *temp = (char *) realloc(B->b, newsize);
@@ -72,10 +44,24 @@ static void b_grow (struct StringBuilder *B, size_t sz) {
 
 
 #define b_addlstring(B,s,sz) (b_grow(B, sz), memcpy(&B->b[B->n], s, sz), B->n += sz)
-#define b_addchar(B,c) (b_grow(B, 1), (B)->b[(B)->n++] = c)
+#define b_addchar(B,c) (b_grow(B, 1), (B)->b[(B)->n++] = (c))
+#define b_addchar_unsafe(B,c) (B)->b[(B)->n++] = (c)
 
 
-static int b_hashing (struct StringBuilder *B, const void *hashptr) {
+static void b_addpointer (StringBuilder *B, const void *p) {
+  b_grow(B, sizeof(void *) * 2 + 2);
+  b_addchar_unsafe(B, '{');
+  unsigned char *s = (unsigned char *) p;
+  unsigned char *e = s + sizeof(void *);
+  for (; s < e; s++) {
+    b_addchar_unsafe(B, (char) ('A' + (*s >> 4)));    /* high 4 bits as A-P char */
+    b_addchar_unsafe(B, (char) ('A' + (*s & 0x0F)));  /* low 4 bits as A-P char */
+  }
+  b_addchar_unsafe(B, '}');
+}
+
+
+static int b_hashing (StringBuilder *B, const void *hashptr) {
   size_t i;
   for (i = 0; i < B->pn; i++) {
     if (B->p[i] == hashptr)
@@ -96,17 +82,18 @@ static int b_hashing (struct StringBuilder *B, const void *hashptr) {
 
 static int writer (lua_State *L, const void *b, size_t size, void *B) {
   (void) L;
+  b_grow(B, size * 2);
   unsigned char *s = (unsigned char *) b;
   unsigned char *e = s + size;
   for (; s < e; s++) {
-    b_addchar((struct StringBuilder *) B, (char) ('A' + (*s >> 4)));    /* high 4 bits as A-P char */
-    b_addchar((struct StringBuilder *) B, (char) ('A' + (*s & 0x0F)));  /* low 4 bits as A-P char */
+    b_addchar_unsafe((StringBuilder *) B, (char) ('A' + (*s >> 4)));    /* high 4 bits as A-P char */
+    b_addchar_unsafe((StringBuilder *) B, (char) ('A' + (*s & 0x0F)));  /* low 4 bits as A-P char */
   }
   return 0;
 }
 
 
-static void serialize (lua_State *L, struct StringBuilder *b, int idx) {
+static void serialize (lua_State *L, StringBuilder *b, int idx) {
   b_addchar(b, '{');
   switch (lua_type(L, idx)) {
     case LUA_TNIL:
@@ -139,33 +126,31 @@ static void serialize (lua_State *L, struct StringBuilder *b, int idx) {
       break;
     }
 	
-    case LUA_TSTRING:
+    case LUA_TSTRING: {
       /* serialize string as binary */
-      b_addchar(b, 'S');
       size_t l;
       unsigned char *s = (unsigned char *) lua_tolstring(L, idx, &l);
       unsigned char *e = s + l;
+      b_grow(b, l * 2 + 1);
+      b_addchar_unsafe(b, 'S');
       for (; s < e; s++) {
-        b_addchar(b, (char) ('A' + (*s >> 4)));    /* high 4 bits as A-P char */
-        b_addchar(b, (char) ('A' + (*s & 0x0F)));  /* low 4 bits as A-P char */
+        b_addchar_unsafe(b, (char) ('A' + (*s >> 4)));    /* high 4 bits as A-P char */
+        b_addchar_unsafe(b, (char) ('A' + (*s & 0x0F)));  /* low 4 bits as A-P char */
       }
       break;
+    }
 	  
     case LUA_TTABLE: {
       /* serialize table */
       const void *p = lua_topointer(L, idx);
       if (b_hashing(b, p)) {
         b_addchar(b, 'P');
-        lua_pushinteger(L, (lua_Integer) p);
-        serialize(L, b, -1);
-        lua_pop(L, 1);
+        b_addpointer(b, p);
         break;
       }
       b_addchar(b, 'T');
       /* serialize table pointer as identificator */
-      lua_pushinteger(L, (lua_Integer) p);
-      serialize(L, b, -1);
-      lua_pop(L, 1);
+      b_addpointer(b, p);
       /* serialize metatable */
       if (lua_getmetatable(L, idx)) {
         b_addchar(b, '#');
@@ -188,9 +173,7 @@ static void serialize (lua_State *L, struct StringBuilder *b, int idx) {
       const void *p = lua_topointer(L, idx);
       if (b_hashing(b, p)) {
         b_addchar(b, 'P');
-        lua_pushinteger(L, (lua_Integer) p);
-        serialize(L, b, -1);
-        lua_pop(L, 1);
+        b_addpointer(b, p);
         break;
       }
       b_addlstring(b, "F{S", 3);
@@ -201,9 +184,7 @@ static void serialize (lua_State *L, struct StringBuilder *b, int idx) {
       lua_pop(L, 1);
       b_addchar(b, '}');
       /* serialize pointer */
-      lua_pushinteger(L, (lua_Integer) p);
-      serialize(L, b, -1);
-      lua_pop(L, 1);
+      b_addpointer(b, p);
       /* serialize upvalues */
       int i;
       const char *name;
@@ -232,10 +213,12 @@ static void serialize (lua_State *L, struct StringBuilder *b, int idx) {
           /* serialize result */
           serialize(L, b, -1);
           lua_pop(L, 1);
-        } else
-          lua_pop(L, 1);
-        break;
+          break;
+        }
+        lua_pop(L, 1);
       }
+      luaL_error(L, _("cannot serialize userdata"));
+      break;
 	  
     default:
       luaL_error(L, _("cannot serialize %s"), lua_typename(L, lua_type(L, idx)));
@@ -245,12 +228,32 @@ static void serialize (lua_State *L, struct StringBuilder *b, int idx) {
 }
 
 
+static int bgc (lua_State *L) {
+  StringBuilder *B = (StringBuilder *) lua_touserdata(L, 1);
+  if (B->b)
+    free(B->b);
+  if (B->p)
+    free(B->p);
+  return 0;
+}
+
+
 LUA_API void lua_serialize (lua_State *L, int idx, int lastidx) {
   /* to absolute index */
   idx = lua_absindex(L, idx);
   lastidx = lua_absindex(L, lastidx);
   /* initialize buffer with hash pointers */
-  struct StringBuilder *B = newbuilder(L);
+  StringBuilder *B = (StringBuilder *) lua_newuserdata(L, sizeof(StringBuilder));
+  B->b = NULL;
+  B->p = NULL;
+  B->size = B->psize = 0;
+  B->n = B->pn = 0;
+  B->L = L;
+  if (luaL_newmetatable(L, "StringBuilder")) {
+    lua_pushcfunction(L, bgc);
+    lua_setfield(L, -2, "__gc");
+  }
+  lua_setmetatable(L, -2);
   int top = lua_gettop(L);
   /* serialize values */
   if (lastidx >= idx) {
