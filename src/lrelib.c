@@ -24,212 +24,160 @@
 #define OVECCOUNT 64
 
 
-struct re_context
-{
+typedef struct {
   pcre *re;
 	int ovector[OVECCOUNT];
-};
+} reState;
 
 
-static struct re_context * compile (lua_State *L, const char *pattern)
-{
-  struct re_context *ctx = (struct re_context *) lua_newuserdata(L, sizeof(struct re_context));
+static reState * compile (lua_State *L, const char *s) {
+  reState *state = (reState *) lua_newuserdata(L, sizeof(reState));
   const char *error;
   int erroffset;
-  
-  ctx->re = pcre_compile(pattern, PCRE_UTF8, &error, &erroffset, NULL);
-  if (ctx->re == NULL)
+  state->re = pcre_compile(s, PCRE_UTF8, &error, &erroffset, NULL);
+  if (state->re)
+    luaL_setmetatable(L, LUA_PCREHANDLE);
+  else
     luaL_error(L, _("pattern error: %s at %d"), error, erroffset);
-  
-  luaL_setmetatable(L, LUA_PCREHANDLE);
-  return ctx;
+  return state;
 }
 
 
-static int re_compile (lua_State *L)
-{
+static int re_compile (lua_State *L) {
   compile(L, luaL_checkstring(L, 1));
   return 1;
 }
 
 
-static int re_exec (lua_State *L)
-{
-  struct re_context *ctx = (struct re_context *) luaL_checkudata(L, 1, LUA_PCREHANDLE);
+static int re_exec (lua_State *L) {
+  reState *state = (reState *) luaL_checkudata(L, 1, LUA_PCREHANDLE);
   size_t l;
-  const char *str = luaL_checklstring(L, 2, &l);
-  int count = pcre_exec(ctx->re, NULL, str, l, 0, 0, ctx->ovector, OVECCOUNT);
-  if (count > 0)
-  {
+  const char *s = luaL_checklstring(L, 2, &l);
+  int count = pcre_exec(state->re, NULL, s, l, 0, 0, state->ovector, OVECCOUNT);
+  if (count > 0) {
     int i;
     for (i = 0; i < count; i++)
-    {
-      int noff = ctx->ovector[2 * i];
-      lua_pushlstring(L, str + noff, (size_t) (ctx->ovector[2 * i + 1] - noff));
-    }
+      lua_pushlstring(L, s + state->ovector[2 * i], (size_t) (state->ovector[2 * i + 1] - state->ovector[2 * i]));
   }
   return count;
 }
 
 
-static int gexec_iter (lua_State *L)
-{
-  struct re_context *ctx = (struct re_context *) luaL_checkudata(L, lua_upvalueindex(1), LUA_PCREHANDLE);
-  
+static int gexec_iter (lua_State *L) {
+  reState *state = (reState *) luaL_checkudata(L, lua_upvalueindex(1), LUA_PCREHANDLE);
   size_t l;
-  const char *str = luaL_checklstring(L, lua_upvalueindex(2), &l);
-  int stroff = (int) luaL_checkinteger(L, lua_upvalueindex(3));
-  
-  int count = pcre_exec(ctx->re, NULL, str, l, stroff, 0, ctx->ovector, OVECCOUNT);
-  if (count > 0)
-  {
-    lua_pushinteger(L, ctx->ovector[1]);
+  const char *s = luaL_checklstring(L, lua_upvalueindex(2), &l);
+  int off = (int) luaL_checkinteger(L, lua_upvalueindex(3));
+  int count = pcre_exec(state->re, NULL, s, l, off, 0, state->ovector, OVECCOUNT);
+  if (count > 0) {
+    lua_pushinteger(L, state->ovector[1]);
     lua_replace(L, lua_upvalueindex(3));
-    
     int i;
     for (i = 0; i < count; i++)
-    {
-      int noff = ctx->ovector[2 * i];
-      lua_pushlstring(L, str + noff, (size_t) (ctx->ovector[2 * i + 1] - noff));
-    }
+      lua_pushlstring(L, s + state->ovector[2 * i], (size_t) (state->ovector[2 * i + 1] - state->ovector[2 * i]));
     return count;
   }
   return 0;
 }
 
 
-static int re_gexec (lua_State *L)
-{
+static int re_gexec (lua_State *L) {
   luaL_checkudata(L, 1, LUA_PCREHANDLE);
   luaL_checkstring(L, 2);
-  
   lua_pushvalue(L, 1);
   lua_pushvalue(L, 2);
   lua_pushinteger(L, 0);
-  
   lua_pushcclosure(L, gexec_iter, 3);
   return 1;
 }
 
 
-static int re_gc (lua_State *L)
-{
-  struct re_context *ctx = (struct re_context *) luaL_checkudata(L, 1, LUA_PCREHANDLE);
-  pcre_free(ctx);
+static int re_gc (lua_State *L) {
+  reState *state = (reState *) luaL_checkudata(L, 1, LUA_PCREHANDLE);
+  pcre_free(state->re);
   return 0;
 }
 
 
-static int re_match (lua_State *L)
-{
+static int re_match (lua_State *L) {
 	size_t l;
-	const char *str = luaL_checklstring(L, 1, &l);
-	struct re_context *ctx = compile(L, luaL_checkstring(L, 2));
-  
-  int count = pcre_exec(ctx->re, NULL, str, l, 0, 0, ctx->ovector, OVECCOUNT);
-  if (count > 0)
-  {
+	const char *s = luaL_checklstring(L, 1, &l);
+	reState *state = compile(L, luaL_checkstring(L, 2));
+  int count = pcre_exec(state->re, NULL, s, l, 0, 0, state->ovector, OVECCOUNT);
+  if (count > 0) {
     int i;
     for (i = 0; i < count; i++)
-    {
-      int noff = ctx->ovector[2 * i];
-      lua_pushlstring(L, str + noff, (size_t) (ctx->ovector[2 * i + 1] - noff));
-    }
+      lua_pushlstring(L, s + state->ovector[2 * i], (size_t) (state->ovector[2 * i + 1] - state->ovector[2 * i]));
     return count;
   }
   return 0;
 }
 
-static int gmatch_iter (lua_State *L)
-{
+static int gmatch_iter (lua_State *L) {
 	size_t l;
-	const char *str = luaL_checklstring(L, lua_upvalueindex(1), &l);
-	int stroff = (int) luaL_checkinteger(L, lua_upvalueindex(2));
-  struct re_context *ctx = (struct re_context *) luaL_checkudata(L, lua_upvalueindex(3), LUA_PCREHANDLE);
-
-	int count = pcre_exec(ctx->re, NULL, str, l, stroff, 0, ctx->ovector, OVECCOUNT);
-	if (count > 0)
-  {
-		lua_pushinteger(L, ctx->ovector[1]);
+	const char *s = luaL_checklstring(L, lua_upvalueindex(1), &l);
+	int off = (int) luaL_checkinteger(L, lua_upvalueindex(2));
+  reState *state = (reState *) luaL_checkudata(L, lua_upvalueindex(3), LUA_PCREHANDLE);
+	int count = pcre_exec(state->re, NULL, s, l, off, 0, state->ovector, OVECCOUNT);
+	if (count > 0) {
+		lua_pushinteger(L, state->ovector[1]);
 		lua_replace(L, lua_upvalueindex(2));
-    
 		int i;
 		for (i = 0; i < count; i++)
-    {
-			int noff = ctx->ovector[2 * i];
-			lua_pushlstring(L, str + noff, (size_t) (ctx->ovector[2 * i + 1] - noff));
-		}
+      lua_pushlstring(L, s + state->ovector[2 * i], (size_t) (state->ovector[2 * i + 1] - state->ovector[2 * i]));
     return count;
 	}
 	return 0;
 }
 
 
-static int re_gmatch (lua_State *L)
-{
+static int re_gmatch (lua_State *L) {
 	luaL_checkstring(L, 1);
-  
 	lua_pushvalue(L, 1);
 	lua_pushinteger(L, 0);
 	compile(L, luaL_checkstring(L, 2));
-  
 	lua_pushcclosure(L, gmatch_iter, 3);
 	return 1;
 }
 
 
-static int re_gsub (lua_State *L)
-{
+static int re_gsub (lua_State *L) {
 	size_t l;
-	const char *str = luaL_checklstring(L, 1, &l);
-  struct re_context *ctx = compile(L, luaL_checkstring(L, 2));
-  const char *replace = luaL_checkstring(L, 3);
-  
+	const char *s = luaL_checklstring(L, 1, &l);
+  reState *state = compile(L, luaL_checkstring(L, 2));
+  const char *r = luaL_checkstring(L, 3);
   luaL_Buffer b;
 	luaL_buffinit(L, &b);
-  int stroff = 0;
-	int count;
-  
-  for (;;)
-  {
-    count = pcre_exec(ctx->re, NULL, str, l, stroff, 0, ctx->ovector, OVECCOUNT);
-    if (count > 0)
-    {
-      luaL_addlstring(&b, str + stroff, (size_t) (ctx->ovector[0] - stroff));
-      stroff = ctx->ovector[1];
-      const char *rep = replace;
-      
-      while (*rep != 0)
-      {
-        if (*rep == '\\')
-        {
+  int off = 0;
+  for (;;) {
+    int count = pcre_exec(state->re, NULL, s, l, off, 0, state->ovector, OVECCOUNT);
+    if (count > 0) {
+      luaL_addlstring(&b, s + off, (size_t) (state->ovector[0] - off));
+      off = state->ovector[1];
+      const char *rep = r;
+      while (*rep != 0) {
+        if (*rep == '\\') {
           rep++;
           int i = 0;
-          while (*rep >= '0' && *rep <= '9')
-          {
+          while (*rep >= '0' && *rep <= '9') {
             i *= 10;
             i += (*rep - '0');
             rep++;
           }
           if (i >= 0 && i <= count)
-          {
-            int noff = ctx->ovector[2 * i];
-            luaL_addlstring(&b, str + noff, (size_t) (ctx->ovector[2 * i + 1] - noff));
-          }
+            lua_pushlstring(L, s + state->ovector[2 * i], (size_t) (state->ovector[2 * i + 1] - state->ovector[2 * i]));
           else
             return luaL_error(L, _("Out of range replace %d of %d"), i, count - 1);
         } else
           luaL_addlstring(&b, rep++, 1);
       }
-    }
-    else
-    {
-        luaL_addstring(&b, str + stroff);
+    } else {
+        luaL_addstring(&b, s + off);
         break;
     } 
   }
-  lua_pop(L, 1);
   luaL_pushresult(&b);
+  lua_remove(L, -2);
 	return 1;
 }
 
@@ -237,8 +185,7 @@ static int re_gsub (lua_State *L)
 /*
 ** functions for 're' library
 */
-static const luaL_Reg re_lib[] =
-{
+static const luaL_Reg re_lib[] = {
   {"compile", re_compile},
   {"exec", re_exec},
   {"gexec", re_gexec},
@@ -252,8 +199,7 @@ static const luaL_Reg re_lib[] =
 /*
 ** methods for re handles
 */
-static const luaL_Reg re_methods[] =
-{
+static const luaL_Reg re_methods[] = {
   {"exec", re_exec},
   {"gexec", re_gexec},
   {"__gc", re_gc},
